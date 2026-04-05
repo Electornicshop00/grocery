@@ -1,0 +1,71 @@
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { ProductProvider } from './context/ProductContext';
+import { OrderProvider } from './context/OrderContext';
+import { ToastProvider } from './context/ToastContext';
+import Home from './pages/Home';
+import Cart from './pages/Cart';
+import Admin from './pages/Admin';
+import Auth from './pages/Auth';
+import Orders from './pages/Orders';
+import Profile from './pages/Profile';
+import Navbar from './components/Navbar';
+
+function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
+  const { user, isAdmin, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (!user || !user.emailVerified) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
+
+  return <>{children}</>;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <ProductProvider>
+          <CartProvider>
+            <OrderProvider>
+              <Router>
+                <div className="min-h-screen bg-gray-50 flex flex-col">
+                  <Navbar />
+                  <main className="flex-grow container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                      <Route 
+                        path="/orders" 
+                        element={
+                          <ProtectedRoute>
+                            <Orders />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/*" 
+                        element={
+                          <ProtectedRoute adminOnly>
+                            <Admin />
+                          </ProtectedRoute>
+                        } 
+                      />
+                    </Routes>
+                  </main>
+                  <footer className="bg-white border-t py-8 text-center text-gray-500">
+                    <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
+                  </footer>
+                </div>
+              </Router>
+            </OrderProvider>
+          </CartProvider>
+        </ProductProvider>
+      </ToastProvider>
+    </AuthProvider>
+  );
+}

@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "A grocery item in the shop.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the item" },
+        "price": { "type": "number", "description": "Price per unit" },
+        "category": { "type": "string", "description": "Category of the item" },
+        "image": { "type": "string", "description": "URL to the product image" },
+        "stock": { "type": "integer", "description": "Available quantity in stock" },
+        "description": { "type": "string", "description": "Product description" }
+      },
+      "required": ["name", "price", "category", "stock"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "object" } },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "customerAddress": { "type": "string" }
+      },
+      "required": ["userId", "items", "total", "status", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User account information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": { "schema": "Product", "description": "Collection of grocery items" },
+    "/orders/{orderId}": { "schema": "Order", "description": "Collection of customer orders" },
+    "/users/{userId}": { "schema": "UserProfile", "description": "Collection of user profiles" }
+  }
+}

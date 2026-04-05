@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: products
+    // Document ID: productId
+    // Fields:
+    //   - name: string (required)
+    //   - price: number (required)
+    //   - category: string (required)
+    //   - image: string (optional)
+    //   - stock: number (required)
+    //   - description: string (optional)
+    //
+    // Collection: orders
+    // Document ID: orderId
+    // Fields:
+    //   - userId: string (required)
+    //   - items: list (required)
+    //   - total: number (required)
+    //   - status: string (required)
+    //   - createdAt: timestamp (required)
+    //   - customerName: string (required)
+    //   - customerPhone: string (required)
+    //   - customerAddress: string (required)
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - role: string (required, 'customer' | 'admin')
+    //   - createdAt: timestamp (required)
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (
+          (request.auth.token.email == "himangsusing37@gmail.com" && request.auth.token.email_verified == true) ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        );
+    }
+
+    function isValidDate(val) {
+      return val is timestamp || (val is string && val.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$"));
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['name', 'price', 'category', 'stock']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.price is number && data.price >= 0 &&
+             data.category is string &&
+             data.stock is int && data.stock >= 0;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'items', 'total', 'status', 'createdAt', 'customerName', 'customerPhone', 'customerAddress', 'paymentMethod']) &&
+             data.userId is string &&
+             data.items is list &&
+             data.total is number && data.total >= 0 &&
+             data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] &&
+             isValidDate(data.createdAt) &&
+             data.customerName is string &&
+             data.customerPhone is string &&
+             data.customerAddress is string &&
+             data.paymentMethod in ['upi', 'cod', 'whatsapp'] &&
+             (data.get('trackingNumber', '') is string);
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['customer', 'admin'] &&
+             isValidDate(data.createdAt) &&
+             (data.get('phone', '') is string) &&
+             (data.get('address', '') is string) &&
+             (data.get('displayName', '') is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    request.resource.data.uid == request.auth.uid &&
+                    (request.resource.data.role == 'customer' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    request.resource.data.uid == resource.data.uid &&
+                    (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidOrder(request.resource.data) && 
+                    request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isValidOrder(request.resource.data) && 
+                    (isAdmin() || (isOwner(resource.data.userId) && request.resource.data.status == resource.data.status)) &&
+                    request.resource.data.userId == resource.data.userId;
+    }
+  }
+}
