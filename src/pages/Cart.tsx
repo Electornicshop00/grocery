@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,6 +15,7 @@ export default function Cart() {
   const { user, profile, updateUserProfile } = useAuth();
   const { placeOrder } = useOrders();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
@@ -47,15 +49,13 @@ export default function Cart() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        // We can't easily reverse geocode without an API key, so we'll provide the coordinates
-        // and a link that the admin can use.
         const locationStr = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
         setFormData(prev => ({
           ...prev,
           address: `${prev.address ? prev.address + '\n' : ''}Current Location: ${locationStr}`
         }));
         setIsLocating(false);
-        showToast('Location captured!', 'success');
+        showToast(t('locationCaptured'), 'success');
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -72,13 +72,12 @@ export default function Cart() {
     }
 
     if (paymentMethod === 'upi' && !upiPaid) {
-      // Merchant UPI ID - You can change this to your actual VPA
-      const merchantVpa = "himangsusing37@okicici"; 
+      const merchantVpa = "7029865930@nyes"; 
       const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=FreshCart%20Order`;
       
       window.location.href = upiLink;
       setUpiPaid(true);
-      showToast('Opening UPI app... Please complete the payment and return here.', 'info');
+      showToast(t('openingUpi'), 'info');
       return;
     }
 
@@ -96,7 +95,6 @@ export default function Cart() {
     }
 
     try {
-      // Update profile if missing info
       if (profile && (!profile.displayName || !profile.phone || !profile.address)) {
         await updateUserProfile({
           displayName: profile.displayName || formData.name,
@@ -130,26 +128,26 @@ export default function Cart() {
           <CheckCircle2 className="w-16 h-16" />
         </motion.div>
         <div className="space-y-4">
-          <h2 className="text-4xl font-bold text-gray-800">Order Confirmed!</h2>
-          <p className="text-xl text-gray-500">Thank you for your purchase. Your fresh groceries are on their way!</p>
+          <h2 className="text-4xl font-bold text-gray-800">{t('orderConfirmed')}</h2>
+          <p className="text-xl text-gray-500">{t('thankYou')}</p>
         </div>
         <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6 text-left">
           <div className="flex justify-between items-center border-b pb-4">
-            <span className="text-gray-500 font-medium">Order Status</span>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">Processing</span>
+            <span className="text-gray-500 font-medium">{t('orderStatus')}</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">{t('processing')}</span>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-bold text-gray-400 uppercase">Delivery to</p>
+            <p className="text-sm font-bold text-gray-400 uppercase">{t('deliveryTo')}</p>
             <p className="font-bold text-gray-800">{formData.name}</p>
             <p className="text-gray-600">{formData.address}</p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/orders" className="bg-green-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-colors">
-            View My Orders
+            {t('viewOrders')}
           </Link>
           <Link to="/" className="bg-gray-100 text-gray-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-colors">
-            Continue Shopping
+            {t('continueShopping')}
           </Link>
         </div>
       </div>
@@ -162,10 +160,10 @@ export default function Cart() {
         <div className="bg-green-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto">
           <ShoppingBag className="w-12 h-12 text-green-600" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800">Your cart is empty</h2>
+        <h2 className="text-3xl font-bold text-gray-800">{t('emptyCart')}</h2>
         <p className="text-gray-500 max-w-md mx-auto">Looks like you haven't added anything to your cart yet. Start shopping to find fresh groceries!</p>
         <Link to="/" className="inline-block bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-colors">
-          Start Shopping
+          {t('startShopping')}
         </Link>
       </div>
     );
@@ -173,7 +171,6 @@ export default function Cart() {
 
   return (
     <div className="space-y-8">
-      {/* Checkout Progress */}
       {step !== 'cart' && (
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between relative">
@@ -183,9 +180,9 @@ export default function Cart() {
             }}></div>
             
             {[
-              { id: 'details', label: 'Details', icon: User },
-              { id: 'payment', label: 'Payment', icon: CreditCard },
-              { id: 'review', label: 'Review', icon: CheckCircle2 }
+              { id: 'details', label: t('deliveryDetails'), icon: User },
+              { id: 'payment', label: t('paymentMethod'), icon: CreditCard },
+              { id: 'review', label: t('reviewOrder'), icon: CheckCircle2 }
             ].map((s, i) => {
               const isActive = step === s.id;
               const isCompleted = ['details', 'payment', 'review'].indexOf(step) > i;
@@ -212,7 +209,7 @@ export default function Cart() {
             <>
               <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
                 <ShoppingBag className="w-8 h-8 text-green-600" />
-                Your Shopping Cart
+                {t('cart')}
               </h1>
 
               <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
@@ -262,7 +259,7 @@ export default function Cart() {
 
           {step === 'payment' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">Choose Payment Method</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{t('paymentMethod')}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setPaymentMethod('upi')}
@@ -275,7 +272,7 @@ export default function Cart() {
                   }`}>
                     <CreditCard className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-lg text-gray-800">UPI Apps</h3>
+                  <h3 className="font-bold text-lg text-gray-800">{t('upiApps')}</h3>
                   <p className="text-sm text-gray-500">GPay, PhonePe, etc.</p>
                 </button>
 
@@ -290,8 +287,8 @@ export default function Cart() {
                   }`}>
                     <ShoppingBag className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-lg text-gray-800">Cash on Delivery</h3>
-                  <p className="text-sm text-gray-500">Pay when you receive.</p>
+                  <h3 className="font-bold text-lg text-gray-800">{t('cod')}</h3>
+                  <p className="text-sm text-gray-500">{t('payAtDelivery')}</p>
                 </button>
 
                 <button 
@@ -305,8 +302,8 @@ export default function Cart() {
                   }`}>
                     <Send className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-lg text-gray-800">WhatsApp</h3>
-                  <p className="text-sm text-gray-500">Order via WhatsApp chat.</p>
+                  <h3 className="font-bold text-lg text-gray-800">{t('whatsapp')}</h3>
+                  <p className="text-sm text-gray-500">{t('directCommunication')}</p>
                 </button>
               </div>
             </div>
@@ -314,16 +311,16 @@ export default function Cart() {
 
           {step === 'details' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">Delivery Details</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{t('deliveryDetails')}</h2>
               <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700">Full Name</label>
+                  <label className="text-sm font-bold text-gray-700">{t('fullName')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input 
                       required
                       type="text" 
-                      placeholder="Enter your full name"
+                      placeholder={t('fullName')}
                       className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-green-500 outline-none"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -331,13 +328,13 @@ export default function Cart() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700">Phone Number</label>
+                  <label className="text-sm font-bold text-gray-700">{t('phoneNumber')}</label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input 
                       required
                       type="tel" 
-                      placeholder="Enter your phone number"
+                      placeholder={t('phoneNumber')}
                       className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-green-500 outline-none"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
@@ -345,12 +342,12 @@ export default function Cart() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700">Delivery Address</label>
+                  <label className="text-sm font-bold text-gray-700">{t('deliveryAddress')}</label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-4 text-gray-400 w-5 h-5" />
                     <textarea 
                       required
-                      placeholder="Enter your full delivery address"
+                      placeholder={t('deliveryAddress')}
                       rows={4}
                       className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
                       value={formData.address}
@@ -367,7 +364,7 @@ export default function Cart() {
                       ) : (
                         <MapPinIcon className="w-3 h-3" />
                       )}
-                      {isLocating ? 'Locating...' : 'Use GPS Location'}
+                      {isLocating ? t('locating') : t('useGps')}
                     </button>
                   </div>
                 </div>
@@ -377,7 +374,7 @@ export default function Cart() {
 
           {step === 'review' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">Review Your Order</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{t('reviewOrder')}</h2>
               <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
                 <div className="p-6 bg-gray-50 border-b flex justify-between items-center">
                   <h3 className="font-bold text-gray-800">Order Items</h3>
@@ -395,7 +392,7 @@ export default function Cart() {
                   ))}
                 </div>
                 <div className="p-6 bg-green-50 border-t flex justify-between items-center">
-                  <span className="font-bold text-green-800">Total Amount</span>
+                  <span className="font-bold text-green-800">{t('total')}</span>
                   <span className="text-2xl font-extrabold text-green-700">₹{total.toFixed(2)}</span>
                 </div>
               </div>
@@ -403,21 +400,21 @@ export default function Cart() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800">Delivery Info</h3>
+                    <h3 className="font-bold text-gray-800">{t('deliveryDetails')}</h3>
                     <button onClick={() => setStep('details')} className="text-green-600 font-bold text-sm hover:underline">Edit</button>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <p className="text-gray-500">Recipient</p>
+                    <p className="text-gray-500">{t('recipient')}</p>
                     <p className="font-bold text-gray-800">{formData.name}</p>
-                    <p className="text-gray-500 mt-2">Address</p>
+                    <p className="text-gray-500 mt-2">{t('address')}</p>
                     <p className="text-gray-800 leading-relaxed">{formData.address}</p>
-                    <p className="text-gray-500 mt-2">Phone</p>
+                    <p className="text-gray-500 mt-2">{t('phone')}</p>
                     <p className="text-gray-800">{formData.phone}</p>
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800">Payment Method</h3>
+                    <h3 className="font-bold text-gray-800">{t('paymentMethod')}</h3>
                     <button onClick={() => setStep('payment')} className="text-green-600 font-bold text-sm hover:underline">Edit</button>
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border">
@@ -426,10 +423,10 @@ export default function Cart() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">
-                        {paymentMethod === 'upi' ? 'UPI Apps' : paymentMethod === 'cod' ? 'Cash on Delivery' : 'WhatsApp Order'}
+                        {paymentMethod === 'upi' ? t('upiApps') : paymentMethod === 'cod' ? t('cod') : t('whatsapp')}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {paymentMethod === 'upi' ? 'GPay, PhonePe, etc.' : paymentMethod === 'cod' ? 'Pay at delivery' : 'Direct communication'}
+                        {paymentMethod === 'upi' ? 'GPay, PhonePe, etc.' : paymentMethod === 'cod' ? t('payAtDelivery') : t('directCommunication')}
                       </p>
                     </div>
                   </div>
@@ -473,7 +470,7 @@ export default function Cart() {
                     <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-4 flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-700 leading-relaxed">
-                        Please verify your email address to proceed with your order.
+                        {t('verifyEmail')}
                       </p>
                     </div>
                   )}
@@ -485,7 +482,7 @@ export default function Cart() {
                         return;
                       }
                       if (!user.emailVerified) {
-                        showToast('Please verify your email to place an order', 'info');
+                        showToast(t('verifyEmail'), 'info');
                         navigate('/auth', { state: { from: '/cart', startStep: 'details' } });
                         return;
                       }
@@ -493,7 +490,7 @@ export default function Cart() {
                     }}
                     className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
                   >
-                    Proceed to Checkout
+                    {t('proceedToCheckout')}
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </>
@@ -511,52 +508,57 @@ export default function Cart() {
                     }}
                     className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
                   >
-                    Next: Payment Method
+                    {t('nextPayment')}
                     <ChevronRight className="w-5 h-5" />
                   </button>
                   <button onClick={() => setStep('cart')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                     <ChevronLeft className="w-4 h-4" />
-                    Back to Cart
+                    {t('backToCart')}
                   </button>
                 </div>
               )}
 
               {step === 'payment' && (
                 <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={() => {
-                      if (paymentMethod === 'upi' && !upiPaid) {
-                        const merchantVpa = "himangsusing37@okicici"; 
+                  {paymentMethod === 'upi' && !upiPaid ? (
+                    <button 
+                      onClick={() => {
+                        const merchantVpa = "7029865930@nyes"; 
                         const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=FreshCart%20Order`;
                         window.location.href = upiLink;
-                        setUpiPaid(true);
-                        showToast('Opening UPI app... Please complete the payment and return here.', 'info');
-                      } else {
-                        setStep('review');
-                      }
-                    }}
-                    className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-                      paymentMethod === 'upi' && !upiPaid 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' 
-                        : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
-                    }`}
-                  >
-                    {paymentMethod === 'upi' && !upiPaid ? `Pay ₹${total.toFixed(2)} via UPI` : 'Next: Review Order'}
-                    {paymentMethod === 'upi' && !upiPaid ? <CreditCard className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                  </button>
-
-                  {paymentMethod === 'upi' && upiPaid && (
-                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-blue-700 leading-relaxed">
-                        Payment initiated. If you have completed the payment, click <strong>Next: Review Order</strong> to proceed.
-                      </p>
+                        
+                        showToast(t('openingUpi'), 'info');
+                        setTimeout(() => {
+                          setUpiPaid(true);
+                          showToast(t('paymentInitiated'), 'success');
+                        }, 2000);
+                      }}
+                      className="w-full py-4 rounded-2xl font-bold text-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                    >
+                      {t('payViaUpi')} ₹{total.toFixed(2)}
+                      <CreditCard className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      {paymentMethod === 'upi' && (
+                        <div className="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+                          <p className="text-xs text-green-700 font-bold">{t('paymentInitiated')}</p>
+                        </div>
+                      )}
+                      <button 
+                        onClick={() => setStep('review')}
+                        className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
+                      >
+                        {t('nextReview')}
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
                     </div>
                   )}
 
                   <button onClick={() => setStep('details')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                     <ChevronLeft className="w-4 h-4" />
-                    Back to Details
+                    {t('backToDetails')}
                   </button>
                 </div>
               )}
@@ -571,9 +573,9 @@ export default function Cart() {
                         : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
                     }`}
                   >
-                    {paymentMethod === 'whatsapp' ? 'Order via WhatsApp' : 
-                     (paymentMethod === 'upi' && !upiPaid) ? `Pay ₹${total.toFixed(2)} via UPI` : 
-                     'Place Order Now'}
+                    {paymentMethod === 'whatsapp' ? t('whatsapp') : 
+                     (paymentMethod === 'upi' && !upiPaid) ? `${t('payViaUpi')} ₹${total.toFixed(2)}` : 
+                     t('placeOrder')}
                     
                     {paymentMethod === 'whatsapp' ? <Send className="w-5 h-5" /> : 
                      (paymentMethod === 'upi' && !upiPaid) ? <CreditCard className="w-5 h-5" /> : 
@@ -584,7 +586,7 @@ export default function Cart() {
                     <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                       <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-blue-700 leading-relaxed">
-                        If you have completed the payment in your UPI app, click <strong>Place Order Now</strong> to finalize your order.
+                        {t('completePayment')}
                       </p>
                     </div>
                   )}
@@ -594,14 +596,14 @@ export default function Cart() {
                     setUpiPaid(false);
                   }} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                     <ChevronLeft className="w-4 h-4" />
-                    Back to Payment
+                    {t('backToPayment')}
                   </button>
                 </div>
               )}
             </div>
 
             <div className="mt-8 p-4 bg-gray-50 rounded-2xl text-center">
-              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">Secure Checkout</p>
+              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">{t('secureCheckout')}</p>
               <div className="flex justify-center gap-4 opacity-30 grayscale">
                 <CreditCard className="w-6 h-6" />
                 <ShoppingBag className="w-6 h-6" />

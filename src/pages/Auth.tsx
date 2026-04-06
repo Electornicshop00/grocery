@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { auth } from '../lib/firebase';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
@@ -14,6 +15,7 @@ import { Mail, Lock, User, LogIn, UserPlus, CheckCircle, Eye, EyeOff } from 'luc
 
 export default function Auth() {
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [showVerification, setShowVerification] = useState(false);
   const [email, setEmail] = useState('');
@@ -28,7 +30,6 @@ export default function Auth() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Only auto-redirect to verification if we're not in the middle of a registration/login process
       if (user && !user.emailVerified && !loading) {
         setEmail(user.email || '');
         setShowVerification(true);
@@ -41,10 +42,7 @@ export default function Auth() {
   const handleResendEmail = async () => {
     setResending(true);
     try {
-      // To resend, we need a signed-in user. 
-      // But we signed them out. This is tricky with "Auth only".
-      // Usually, we'd ask them to log in again, and then catch them in the login flow.
-      showToast('Please log in to resend the verification email.', 'info');
+      showToast(t('loginToCart'), 'info');
       setShowVerification(false);
       setIsLogin(true);
     } catch (err: any) {
@@ -64,15 +62,13 @@ export default function Auth() {
         try {
           const { user } = await signInWithEmailAndPassword(auth, email, password);
           if (!user.emailVerified) {
-            console.log("User not verified, sending verification email to:", user.email);
             await sendEmailVerification(user);
-            console.log("Verification email sent.");
             await signOut(auth);
             setShowVerification(true);
-            showToast('Email not verified. A new verification link has been sent.', 'info');
+            showToast(t('verifyEmail'), 'info');
             return;
           }
-          showToast('Logged in successfully', 'success');
+          showToast(t('login'), 'success');
           navigate('/');
         } catch (err: any) {
           if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -90,12 +86,10 @@ export default function Auth() {
           if (displayName) {
             await updateProfile(user, { displayName });
           }
-          console.log("Sending verification email to:", user.email);
           await sendEmailVerification(user);
-          console.log("Verification email sent.");
           await signOut(auth);
           setShowVerification(true);
-          showToast('Verification email sent', 'success');
+          showToast(t('verifyEmail'), 'success');
         } catch (err: any) {
           if (err.code === 'auth/email-already-in-use') {
             const msg = "User already exists. Please sign in";
@@ -122,7 +116,7 @@ export default function Auth() {
           <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Verify Your Email</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">{t('verifyEmail')}</h1>
           <p className="text-gray-600 mb-8">
             We have sent you a verification email to <span className="font-bold text-gray-800">{email}</span>. 
             Please verify it and log in.
@@ -135,14 +129,14 @@ export default function Auth() {
               }}
               className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors"
             >
-              Back to Login
+              {t('login')}
             </button>
             <button 
               onClick={handleResendEmail}
               disabled={resending}
               className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
-              {resending ? 'Processing...' : 'Resend Verification Email'}
+              {resending ? 'Processing...' : t('verifyEmail')}
             </button>
           </div>
         </div>
@@ -157,7 +151,7 @@ export default function Auth() {
           <div className="bg-green-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
             {isLogin ? <LogIn className="w-8 h-8 text-green-600" /> : <UserPlus className="w-8 h-8 text-green-600" />}
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+          <h1 className="text-3xl font-bold text-gray-800">{isLogin ? t('login') : t('signup')}</h1>
           <p className="text-gray-500 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
         </div>
 
@@ -174,7 +168,7 @@ export default function Auth() {
               <input 
                 required
                 type="text" 
-                placeholder="Full Name"
+                placeholder={t('fullName')}
                 className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -216,7 +210,7 @@ export default function Auth() {
             disabled={loading}
             className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Processing...' : isLogin ? 'Login' : 'Create Account'}
+            {loading ? 'Processing...' : isLogin ? t('login') : t('signup')}
           </button>
         </form>
 
@@ -226,7 +220,7 @@ export default function Auth() {
             onClick={() => setIsLogin(!isLogin)}
             className="ml-2 text-green-600 font-bold hover:underline"
           >
-            {isLogin ? 'Sign Up' : 'Login'}
+            {isLogin ? t('signup') : t('login')}
           </button>
         </p>
       </div>

@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, LayoutDashboard, Store, ClipboardList } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, Store, ClipboardList, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 
@@ -10,11 +11,12 @@ export default function Navbar() {
   const { user, isAdmin, profile } = useAuth();
   const { cart } = useCart();
   const { showToast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await signOut(auth);
-    showToast('Logged out successfully', 'info');
+    showToast(t('logout'), 'info');
     navigate('/auth');
   };
 
@@ -28,13 +30,28 @@ export default function Navbar() {
           <span>FreshCart</span>
         </Link>
 
-        <div className="flex items-center gap-6">
-          <Link to="/" className="text-gray-600 hover:text-green-600 font-medium">Shop</Link>
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-4 border-r pr-4 md:pr-6">
+            <button 
+              onClick={() => setLanguage('en')}
+              className={`text-xs md:text-sm font-bold transition-colors ${language === 'en' ? 'text-green-600' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              EN
+            </button>
+            <button 
+              onClick={() => setLanguage('bn')}
+              className={`text-xs md:text-sm font-bold transition-colors ${language === 'bn' ? 'text-green-600' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              BN
+            </button>
+          </div>
+
+          <Link to="/" className="text-gray-600 hover:text-green-600 font-medium">{t('shop')}</Link>
           
           <button 
             onClick={() => {
               if (!user || !user.emailVerified) {
-                showToast('Please login to access your cart', 'info');
+                showToast(t('loginToCart'), 'info');
                 navigate('/auth', { state: { from: '/cart' } });
               } else {
                 navigate('/cart');
@@ -54,12 +71,12 @@ export default function Navbar() {
             <div className="flex items-center gap-4">
               <Link to="/orders" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
                 <ClipboardList className="w-5 h-5" />
-                <span className="hidden md:inline">My Orders</span>
+                <span className="hidden md:inline">{t('myOrders')}</span>
               </Link>
               {isAdmin && (
                 <Link to="/admin" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
                   <LayoutDashboard className="w-5 h-5" />
-                  <span className="hidden md:inline">Admin</span>
+                  <span className="hidden md:inline">{t('admin')}</span>
                 </Link>
               )}
               <Link to="/profile" className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition-colors">
@@ -69,7 +86,7 @@ export default function Navbar() {
               <button 
                 onClick={handleLogout}
                 className="text-gray-600 hover:text-red-600 p-1"
-                title="Logout"
+                title={t('logout')}
               >
                 <LogOut className="w-5 h-5" />
               </button>
@@ -79,7 +96,7 @@ export default function Navbar() {
               to="/auth" 
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
             >
-              Login / Register
+              {t('loginRegister')}
             </Link>
           )}
         </div>

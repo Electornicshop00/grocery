@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Package, 
   ShoppingBag, 
@@ -24,6 +25,7 @@ import { Order } from '../types';
 export default function Orders() {
   const { userOrders, loading } = useOrders();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
   const getStatusStyles = (status: Order['status']) => {
@@ -54,27 +56,19 @@ export default function Orders() {
   };
 
   const getTrackingLink = (trackingNumber: string) => {
-    // Basic detection for common carriers
     const num = trackingNumber.trim().toUpperCase();
-    
-    // FedEx: 12 or 15 digits
     if (/^\d{12}$|^\d{15}$/.test(num)) {
       return `https://www.fedex.com/fedextrack/?trknbr=${num}`;
     }
-    // UPS: Starts with 1Z
     if (/^1Z[A-Z0-9]{16}$/.test(num)) {
       return `https://www.ups.com/track?tracknum=${num}`;
     }
-    // USPS: 20-22 digits or starts with 2 letters and 9 digits
     if (/^\d{20,22}$|^[A-Z]{2}\d{9}[A-Z]{2}$/.test(num)) {
       return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${num}`;
     }
-    // DHL: 10 digits
     if (/^\d{10}$/.test(num)) {
       return `https://www.dhl.com/en/express/tracking.html?AWB=${num}&brand=DHL`;
     }
-    
-    // Default to a generic Google search if format not recognized
     return `https://www.google.com/search?q=track+package+${num}`;
   };
 
@@ -92,10 +86,10 @@ export default function Orders() {
         <div className="bg-gray-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto">
           <ShoppingBag className="w-12 h-12 text-gray-400" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800">No orders yet</h2>
+        <h2 className="text-3xl font-bold text-gray-800">{t('noOrders')}</h2>
         <p className="text-gray-500 max-w-md mx-auto">You haven't placed any orders yet. Start shopping to fill your pantry!</p>
         <Link to="/" className="inline-block bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-colors">
-          Start Shopping
+          {t('startShopping')}
         </Link>
       </div>
     );
@@ -105,7 +99,7 @@ export default function Orders() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">My Orders</h1>
+          <h1 className="text-3xl font-bold text-gray-800">{t('orders')}</h1>
           <p className="text-gray-500">Track and manage your grocery orders.</p>
         </div>
         <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl font-bold text-sm border border-green-100">
@@ -141,7 +135,7 @@ export default function Orders() {
                 
                 <div className="flex items-center gap-6">
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">Total Amount</p>
+                    <p className="text-sm text-gray-500">{t('total')}</p>
                     <p className="text-xl font-bold text-green-700">₹{order.total.toFixed(2)}</p>
                   </div>
                   <div className={`p-2 rounded-full bg-gray-100 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
@@ -173,7 +167,7 @@ export default function Orders() {
                             </div>
                           ))}
                           <div className="border-t pt-3 mt-3 flex justify-between items-center font-bold text-gray-800">
-                            <span>Total</span>
+                            <span>{t('total')}</span>
                             <span className="text-green-700 text-lg">₹{order.total.toFixed(2)}</span>
                           </div>
                         </div>
@@ -183,7 +177,7 @@ export default function Orders() {
                         <div>
                           <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            Delivery Details
+                            {t('deliveryDetails')}
                           </h4>
                           <div className="bg-white p-4 rounded-xl border space-y-4">
                             <div className="flex items-start gap-3 text-sm">
@@ -203,7 +197,7 @@ export default function Orders() {
                             <div className="flex items-center gap-3 text-sm">
                               <CreditCard className="w-5 h-5 text-green-600 shrink-0" />
                               <div>
-                                <p className="font-bold text-gray-800">Payment Method</p>
+                                <p className="font-bold text-gray-800">{t('paymentMethod')}</p>
                                 <p className="text-gray-600 uppercase">{order.paymentMethod}</p>
                               </div>
                             </div>

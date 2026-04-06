@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { cn } from '../lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -14,18 +15,19 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart, updateQuantity } = useCart();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const cartItem = cart.find(item => item.id === product.id);
 
   const handleAddToCart = () => {
     if (!user || !user.emailVerified) {
-      showToast('Please login to add items to cart', 'info');
+      showToast(t('loginToCart'), 'info');
       navigate('/auth', { state: { from: location.pathname } });
       return;
     }
     addToCart(product);
-    showToast(`${product.name} added to cart`, 'success');
+    showToast(`${product.name} ${t('addToCart')}`, 'success');
   };
 
   const handleBuyNow = () => {
@@ -33,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       if (!cartItem) {
         addToCart(product);
       }
-      showToast('Please login to checkout', 'info');
+      showToast(t('loginToCart'), 'info');
       navigate('/auth', { state: { from: '/cart', startStep: 'details' } });
       return;
     }
@@ -54,7 +56,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         />
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold uppercase">Out of Stock</span>
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold uppercase">{t('outOfStock')}</span>
           </div>
         )}
       </div>
@@ -100,7 +102,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 )}
               >
                 <ShoppingCart className="w-4 h-4" />
-                Add
+                {t('addToCart').split(' ')[0]}
               </button>
             )}
           </div>
@@ -116,7 +118,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             )}
           >
             <CreditCard className="w-4 h-4" />
-            Buy Now
+            {t('checkout')}
           </button>
         </div>
       </div>

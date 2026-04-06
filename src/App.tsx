@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext';
 import { ProductProvider } from './context/ProductContext';
 import { OrderProvider } from './context/OrderContext';
 import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider } from './context/LanguageContext';
 import Home from './pages/Home';
 import Cart from './pages/Cart';
 import Admin from './pages/Admin';
@@ -31,36 +32,38 @@ export default function App() {
           <CartProvider>
             <OrderProvider>
               <Router>
-                <div className="min-h-screen bg-gray-50 flex flex-col">
-                  <Navbar />
-                  <main className="flex-grow container mx-auto px-4 py-8">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                      <Route 
-                        path="/orders" 
-                        element={
-                          <ProtectedRoute>
-                            <Orders />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/admin/*" 
-                        element={
-                          <ProtectedRoute adminOnly>
-                            <Admin />
-                          </ProtectedRoute>
-                        } 
-                      />
-                    </Routes>
-                  </main>
-                  <footer className="bg-white border-t py-8 text-center text-gray-500">
-                    <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
-                  </footer>
-                </div>
+                <LanguageProvider>
+                  <div className="min-h-screen bg-gray-50 flex flex-col">
+                    <Navbar />
+                    <main className="flex-grow container mx-auto px-4 py-8">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                        <Route 
+                          path="/orders" 
+                          element={
+                            <ProtectedRoute>
+                              <Orders />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/admin/*" 
+                          element={
+                            <ProtectedRoute adminOnly>
+                              <Admin />
+                            </ProtectedRoute>
+                          } 
+                        />
+                      </Routes>
+                    </main>
+                    <footer className="bg-white border-t py-8 text-center text-gray-500">
+                      <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
+                    </footer>
+                  </div>
+                </LanguageProvider>
               </Router>
             </OrderProvider>
           </CartProvider>

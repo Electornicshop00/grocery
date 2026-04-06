@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { useProducts } from '../context/ProductContext';
 import ProductCard from '../components/ProductCard';
 import { Search, Filter, ShoppingBag } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Home() {
   const { products, loading } = useProducts();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const categories = ['All', ...new Set(products.map(p => p.category))];
-// ... rest of the file
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -31,15 +32,14 @@ export default function Home() {
       <div className="relative rounded-3xl overflow-hidden bg-green-600 text-white p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-6 max-w-xl">
           <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
-            Fresh Groceries <br /> Delivered to Your Door
+            {t('shop')} <br /> {t('thankYou').split('.')[0]}
           </h1>
           <p className="text-lg text-green-100">
-            Shop from a wide range of fresh fruits, vegetables, dairy, and more. 
-            Quality guaranteed with every order.
+            {t('thankYou')}
           </p>
           <button className="bg-white text-green-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-green-50 transition-colors flex items-center gap-2">
             <ShoppingBag className="w-5 h-5" />
-            Shop Now
+            {t('startShopping')}
           </button>
         </div>
         <div className="hidden md:block w-1/3">
@@ -58,7 +58,7 @@ export default function Home() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input 
             type="text" 
-            placeholder="Search for items..."
+            placeholder={t('searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -77,7 +77,7 @@ export default function Home() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {category}
+              {category === 'All' ? t('all') : category}
             </button>
           ))}
         </div>
