@@ -25,9 +25,13 @@ export default function Navbar() {
   return (
     <nav className="bg-white border-b sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-green-600">
-          <Store className="w-8 h-8" />
-          <span>FreshCart</span>
+        <Link to="/" className="flex items-center gap-2">
+          <img 
+            src="https://picsum.photos/seed/user-logo/100/100" 
+            alt="Logo" 
+            className="w-10 h-10 rounded-full object-cover border-2 border-green-600 shadow-sm"
+            referrerPolicy="no-referrer"
+          />
         </Link>
 
         <div className="flex items-center gap-4 md:gap-6">
