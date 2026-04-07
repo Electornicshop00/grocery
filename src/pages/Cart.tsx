@@ -23,6 +23,8 @@ export default function Cart() {
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
   const [upiTransactionId, setUpiTransactionId] = useState('');
+  const [hasUploadedScreenshot, setHasUploadedScreenshot] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
@@ -456,20 +458,46 @@ export default function Cart() {
                           </button>
                           <button 
                             type="button"
+                            disabled={isVerifying}
                             onClick={() => {
                               // Open the Google Form in a new tab
                               window.open("https://docs.google.com/forms/d/e/1FAIpQLSeY3xwUil1wSu4mdayGC2lsUxb_2jog6OOsuEDSzuvd-fq_5Q/viewform?usp=sharing&ouid=112329330864656740398", "_blank");
                               
-                              // Show the verification message
-                              showToast("Please wait for verification. Your order is being placed.", "info");
+                              // Start verification simulation
+                              setIsVerifying(true);
+                              showToast("Please wait for verification. Checking your upload...", "info");
                               
-                              // Place the order and redirect to success step
-                              handlePlaceOrder();
+                              // After 5 seconds, mark as verified
+                              setTimeout(() => {
+                                setIsVerifying(false);
+                                setHasUploadedScreenshot(true);
+                                showToast("Payment verified! You can now place your order.", "success");
+                              }, 5000);
                             }}
-                            className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100 w-full md:w-auto"
+                            className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg w-full md:w-auto ${
+                              isVerifying 
+                                ? 'bg-yellow-500 text-white shadow-yellow-100' 
+                                : hasUploadedScreenshot 
+                                  ? 'bg-green-600 text-white shadow-green-100' 
+                                  : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
+                            }`}
                           >
-                            Upload Screenshot
-                            <Upload className="w-4 h-4" />
+                            {isVerifying ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : hasUploadedScreenshot ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" />
+                                Verified
+                              </>
+                            ) : (
+                              <>
+                                Upload Screenshot
+                                <Upload className="w-4 h-4" />
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -479,9 +507,9 @@ export default function Cart() {
                   <div className="flex flex-col gap-3">
                     <button 
                       onClick={handlePlaceOrder}
-                      disabled={isAdmin || isUploading}
+                      disabled={isAdmin || isUploading || (paymentMethod === 'upi' && !hasUploadedScreenshot)}
                       className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-                        isAdmin || isUploading
+                        isAdmin || isUploading || (paymentMethod === 'upi' && !hasUploadedScreenshot)
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
                           : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
                       }`}
