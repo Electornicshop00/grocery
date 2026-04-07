@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, LayoutDashboard, Store, ClipboardList, Globe } from 'lucide-react';
+import { ShoppingCart, User, LogOut, LayoutDashboard, Store, ClipboardList, Globe, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
@@ -51,6 +51,10 @@ export default function Navbar() {
           </div>
 
           <Link to="/" className="text-gray-600 hover:text-green-600 font-medium">{t('shop')}</Link>
+          <Link to="/upi-payment" className="text-gray-600 hover:text-green-600 font-medium flex items-center gap-1">
+            <CreditCard className="w-5 h-5" />
+            <span className="hidden md:inline">UPI Pay</span>
+          </Link>
           
           <button 
             onClick={() => {
@@ -78,10 +82,16 @@ export default function Navbar() {
                 <span className="hidden md:inline">{t('myOrders')}</span>
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                  <LayoutDashboard className="w-5 h-5" />
-                  <span className="hidden md:inline">{t('admin')}</span>
-                </Link>
+                <>
+                  <Link to="/admin" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span className="hidden md:inline">{t('admin')}</span>
+                  </Link>
+                  <Link to="/admin/upi" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                    <CreditCard className="w-5 h-5" />
+                    <span className="hidden md:inline">UPI Admin</span>
+                  </Link>
+                </>
               )}
               <Link to="/profile" className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition-colors">
                 <User className="w-5 h-5" />

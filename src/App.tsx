@@ -11,6 +11,8 @@ import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
+import UpiPayment from './pages/UpiPayment';
+import AdminUpi from './pages/AdminUpi';
 import Navbar from './components/Navbar';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
@@ -18,7 +20,7 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
   const location = useLocation();
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  if (!user || !user.emailVerified) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  if (!user) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
 
   return <>{children}</>;
@@ -41,11 +43,20 @@ export default function App() {
                         <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                        <Route path="/upi-payment" element={<ProtectedRoute><UpiPayment /></ProtectedRoute>} />
                         <Route 
                           path="/orders" 
                           element={
                             <ProtectedRoute>
                               <Orders />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/admin/upi" 
+                          element={
+                            <ProtectedRoute adminOnly>
+                              <AdminUpi />
                             </ProtectedRoute>
                           } 
                         />

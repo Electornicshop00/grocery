@@ -603,6 +603,27 @@ export default function Admin() {
                                   <div>
                                     <p className="font-bold text-gray-800">Payment Method</p>
                                     <p className="text-gray-600 uppercase">{order.paymentMethod}</p>
+                                    {order.upiTransactionId && (
+                                      <p className="text-[10px] text-blue-600 font-bold mt-1">TXN: {order.upiTransactionId}</p>
+                                    )}
+                                    {order.screenshotUrl && (
+                                      <div className="mt-2">
+                                        <p className="text-[10px] text-green-600 font-bold mb-1">Payment Proof:</p>
+                                        <a 
+                                          href={order.screenshotUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="block w-20 h-20 rounded-lg overflow-hidden border hover:border-green-500 transition-colors"
+                                        >
+                                          <img 
+                                            src={order.screenshotUrl} 
+                                            alt="UPI Screenshot" 
+                                            className="w-full h-full object-cover"
+                                            referrerPolicy="no-referrer"
+                                          />
+                                        </a>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">

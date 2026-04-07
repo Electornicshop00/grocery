@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   useEffect(() => {
-    const isHardcodedAdmin = user?.email?.toLowerCase() === "himangsusing37@gmail.com" && user?.emailVerified;
+    const isHardcodedAdmin = user?.email?.toLowerCase() === "himangsusing37@gmail.com";
     const isProfileAdmin = profile?.role === 'admin';
     setIsAdmin(!!(isHardcodedAdmin || isProfileAdmin));
   }, [user, profile]);

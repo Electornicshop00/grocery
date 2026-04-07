@@ -4,9 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2, Smartphone, Upload } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { storage, db } from '../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 type CheckoutStep = 'cart' | 'payment' | 'details' | 'review' | 'success';
 
@@ -19,8 +22,14 @@ export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod' | 'whatsapp'>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
   const [upiPaid, setUpiPaid] = useState(false);
+  const [upiTransactionId, setUpiTransactionId] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [orderIdForUpi, setOrderIdForUpi] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -35,9 +44,24 @@ export default function Cart() {
         address: profile.address || ''
       });
     }
+    
+    // Generate a temporary order ID for UPI note
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    setOrderIdForUpi(`ORD-${timestamp}-${random}`);
   }, [profile]);
 
-  const [isLocating, setIsLocating] = useState(false);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setScreenshot(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -86,20 +110,35 @@ export default function Cart() {
       return;
     }
 
-    if (paymentMethod === 'whatsapp') {
-      const message = `*New Order from FreshCart*%0A%0A` +
-        `*Customer:* ${formData.name || user?.email}%0A` +
-        `*Phone:* ${formData.phone}%0A` +
-        `*Delivery Address:* ${formData.address}%0A%0A` +
-        `*Items:*%0A` +
-        cart.map(item => `- ${item.name} x${item.quantity} (₹${(item.price * item.quantity).toFixed(2)})`).join('%0A') +
-        `%0A%0A*Total: ₹${total.toFixed(2)}*%0A%0A` +
-        `*Location Link:* https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`;
-      
-      window.open(`https://wa.me/919907383139?text=${message}`, '_blank');
-    }
-
     try {
+      let screenshotUrl = '';
+      if (paymentMethod === 'upi' && screenshot) {
+        setIsUploading(true);
+        try {
+          const storageRef = ref(storage, `upi_screenshots/${orderIdForUpi}-${screenshot.name}`);
+          const uploadResult = await uploadBytes(storageRef, screenshot);
+          screenshotUrl = await getDownloadURL(uploadResult.ref);
+          
+          // Create an entry in upi_orders for the admin dashboard
+          await addDoc(collection(db, 'upi_orders'), {
+            orderId: orderIdForUpi,
+            userName: formData.name || user.email,
+            amount: total,
+            screenshotUrl,
+            status: 'pending',
+            createdAt: Timestamp.now(),
+            userId: user.uid
+          });
+        } catch (storageError) {
+          console.error('Storage upload error:', storageError);
+          if (storageError instanceof Error && storageError.message.includes('retry-limit-exceeded')) {
+             showToast('Storage upload failed. Please ensure Firebase Storage is enabled in your console.', 'error');
+             throw new Error('Firebase Storage is not initialized or accessible. Please check your Firebase console.');
+          }
+          throw storageError;
+        }
+      }
+
       if (profile && (!profile.displayName || !profile.phone || !profile.address)) {
         await updateUserProfile({
           displayName: profile.displayName || formData.name,
@@ -112,13 +151,15 @@ export default function Cart() {
         name: formData.name,
         phone: formData.phone,
         address: formData.address
-      }, paymentMethod);
+      }, paymentMethod, upiTransactionId, screenshotUrl);
       
       setStep('success');
       clearCart();
     } catch (error) {
       console.error("Error placing order:", error);
       showToast('Failed to place order. Please try again.', 'error');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -265,7 +306,7 @@ export default function Cart() {
           {step === 'payment' && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800">{t('paymentMethod')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button 
                   onClick={() => setPaymentMethod('upi')}
                   className={`p-6 rounded-3xl border-2 text-left transition-all ${
@@ -294,21 +335,6 @@ export default function Cart() {
                   </div>
                   <h3 className="font-bold text-lg text-gray-800">{t('cod')}</h3>
                   <p className="text-sm text-gray-500">{t('payAtDelivery')}</p>
-                </button>
-
-                <button 
-                  onClick={() => setPaymentMethod('whatsapp')}
-                  className={`p-6 rounded-3xl border-2 text-left transition-all ${
-                    paymentMethod === 'whatsapp' ? 'border-green-600 bg-green-50 shadow-md' : 'border-gray-100 hover:border-green-200'
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
-                    paymentMethod === 'whatsapp' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'
-                  }`}>
-                    <Send className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-800">{t('whatsapp')}</h3>
-                  <p className="text-sm text-gray-500">{t('directCommunication')}</p>
                 </button>
               </div>
             </div>
@@ -424,14 +450,14 @@ export default function Cart() {
                   </div>
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border">
                     <div className="bg-green-600 text-white p-2 rounded-xl">
-                      {paymentMethod === 'upi' ? <CreditCard className="w-5 h-5" /> : paymentMethod === 'cod' ? <ShoppingBag className="w-5 h-5" /> : <Send className="w-5 h-5" />}
+                      {paymentMethod === 'upi' ? <CreditCard className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">
-                        {paymentMethod === 'upi' ? t('upiApps') : paymentMethod === 'cod' ? t('cod') : t('whatsapp')}
+                        {paymentMethod === 'upi' ? t('upiApps') : t('cod')}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {paymentMethod === 'upi' ? 'GPay, PhonePe, etc.' : paymentMethod === 'cod' ? t('payAtDelivery') : t('directCommunication')}
+                        {paymentMethod === 'upi' ? 'GPay, PhonePe, etc.' : t('payAtDelivery')}
                       </p>
                     </div>
                   </div>
@@ -541,47 +567,96 @@ export default function Cart() {
               )}
 
               {step === 'payment' && (
-                <div className="flex flex-col gap-3">
-                  {paymentMethod === 'upi' && !upiPaid ? (
-                    <button 
-                      onClick={() => {
-                        const merchantVpa = "7029865930@nyes"; 
-                        const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=FreshCart%20Order`;
-                        window.location.href = upiLink;
-                        
-                        showToast(t('openingUpi'), 'info');
-                        setTimeout(() => {
-                          setUpiPaid(true);
-                          showToast(t('paymentInitiated'), 'success');
-                        }, 2000);
-                      }}
-                      className="w-full py-4 rounded-2xl font-bold text-lg bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
-                    >
-                      {t('payViaUpi')} ₹{total.toFixed(2)}
-                      <CreditCard className="w-5 h-5" />
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
-                      {paymentMethod === 'upi' && (
-                        <div className="bg-green-50 border border-green-100 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-                          <p className="text-xs text-green-700 font-bold">{t('paymentInitiated')}</p>
+                <div className="flex flex-col gap-6">
+                  {paymentMethod === 'upi' && (
+                    <div className="space-y-6">
+                      <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col md:flex-row items-center gap-6">
+                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-blue-100">
+                          <Smartphone className="w-12 h-12 text-blue-600" />
                         </div>
-                      )}
-                      <button 
-                        onClick={() => setStep('review')}
-                        className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
-                      >
-                        {t('nextReview')}
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
+                        <div className="flex-grow space-y-3 text-center md:text-left">
+                          <h3 className="font-bold text-blue-900">Pay using UPI</h3>
+                          <p className="text-xs text-blue-700">Open any UPI app and pay to the merchant VPA. Include Order ID <span className="font-mono font-bold">{orderIdForUpi}</span> in note.</p>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              const merchantVpa = "7029865930@nyes"; 
+                              const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Order ' + orderIdForUpi)}`;
+                              window.location.href = upiLink;
+                              showToast(t('openingUpi'), 'info');
+                              setUpiPaid(true);
+                            }}
+                            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 w-full md:w-auto"
+                          >
+                            Pay Now
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-green-600 font-bold">
+                          <Upload className="w-5 h-5" />
+                          <h2>Upload Payment Screenshot</h2>
+                        </div>
+                        
+                        <div className="relative">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            id="screenshot-upload"
+                          />
+                          <label 
+                            htmlFor="screenshot-upload"
+                            className={`w-full border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all ${
+                              screenshotPreview ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'
+                            }`}
+                          >
+                            {screenshotPreview ? (
+                              <div className="relative w-full max-w-[150px] aspect-[9/16] rounded-xl overflow-hidden shadow-lg">
+                                <img src={screenshotPreview} alt="Preview" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                  <p className="text-white text-[10px] font-bold">Change Image</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-12 h-12 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center">
+                                  <Upload className="w-6 h-6" />
+                                </div>
+                                <div className="text-center">
+                                  <p className="font-bold text-gray-700 text-sm">Upload Screenshot</p>
+                                  <p className="text-[10px] text-gray-500 mt-1">Take a screenshot of the success screen</p>
+                                </div>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  <button onClick={() => setStep('details')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
-                    <ChevronLeft className="w-4 h-4" />
-                    {t('backToDetails')}
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={() => {
+                        if (paymentMethod === 'upi' && !screenshot) {
+                          showToast('Please upload a payment screenshot', 'error');
+                          return;
+                        }
+                        setStep('review');
+                      }}
+                      className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
+                    >
+                      {t('nextReview')}
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setStep('details')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
+                      <ChevronLeft className="w-4 h-4" />
+                      {t('backToDetails')}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -589,26 +664,31 @@ export default function Cart() {
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={handlePlaceOrder}
+                    disabled={isAdmin || (paymentMethod === 'upi' && !screenshot) || isUploading}
                     className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-                      paymentMethod === 'upi' && !upiPaid 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' 
+                      isAdmin || (paymentMethod === 'upi' && !screenshot) || isUploading
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
                         : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
                     }`}
                   >
-                    {paymentMethod === 'whatsapp' ? t('whatsapp') : 
-                     (paymentMethod === 'upi' && !upiPaid) ? `${t('payViaUpi')} ₹${total.toFixed(2)}` : 
-                     t('placeOrder')}
-                    
-                    {paymentMethod === 'whatsapp' ? <Send className="w-5 h-5" /> : 
-                     (paymentMethod === 'upi' && !upiPaid) ? <CreditCard className="w-5 h-5" /> : 
-                     <CheckCircle2 className="w-5 h-5" />}
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        Uploading Proof...
+                      </>
+                    ) : (
+                      <>
+                        {t('placeOrder')}
+                        <CheckCircle2 className="w-5 h-5" />
+                      </>
+                    )}
                   </button>
                   
-                  {paymentMethod === 'upi' && upiPaid && (
+                  {paymentMethod === 'upi' && screenshot && (
                     <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                       <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                       <p className="text-xs text-blue-700 leading-relaxed">
-                        {t('completePayment')}
+                        Screenshot attached. Clicking "Place Order" will upload your proof and submit your order for verification.
                       </p>
                     </div>
                   )}
