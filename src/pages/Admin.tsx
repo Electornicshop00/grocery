@@ -158,6 +158,8 @@ export default function Admin() {
     { label: 'Low Stock Items', value: products.filter(p => p.stock < 10).length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
   ];
 
+  const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
+
   const lowStockProducts = products.filter(p => p.stock < 10);
 
   const filteredProducts = products.filter(p => {
@@ -183,9 +185,16 @@ export default function Admin() {
             </button>
             <button 
               onClick={() => setActiveTab('orders')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'orders' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'orders' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Orders
+              {activeOrdersCount > 0 && (
+                <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold ${
+                  activeTab === 'orders' ? 'bg-white text-green-600' : 'bg-red-500 text-white'
+                }`}>
+                  {activeOrdersCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

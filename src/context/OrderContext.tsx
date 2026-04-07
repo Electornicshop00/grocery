@@ -143,6 +143,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     paymentMethod: Order['paymentMethod']
   ) => {
     if (!user) throw new Error('Must be logged in to place an order');
+    if (isAdmin) throw new Error('Administrators cannot place orders');
 
     const orderData = {
       userId: user.uid,

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -12,7 +12,7 @@ type CheckoutStep = 'cart' | 'payment' | 'details' | 'review' | 'success';
 
 export default function Cart() {
   const { cart, total, updateQuantity, removeFromCart, clearCart } = useCart();
-  const { user, profile, updateUserProfile } = useAuth();
+  const { user, profile, updateUserProfile, isAdmin } = useAuth();
   const { placeOrder } = useOrders();
   const { showToast } = useToast();
   const { t } = useLanguage();
@@ -68,6 +68,11 @@ export default function Cart() {
   const handlePlaceOrder = async () => {
     if (!user || !user.emailVerified) {
       navigate('/auth');
+      return;
+    }
+
+    if (isAdmin) {
+      showToast('Administrators cannot place orders. Please use a customer account.', 'error');
       return;
     }
 
@@ -474,6 +479,14 @@ export default function Cart() {
                       </p>
                     </div>
                   )}
+                  {isAdmin && (
+                    <div className="bg-red-50 border border-red-100 p-4 rounded-2xl mb-4 flex items-start gap-3">
+                      <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-700 leading-relaxed font-bold">
+                        Admin accounts are for management only and cannot place orders.
+                      </p>
+                    </div>
+                  )}
                   <button 
                     onClick={() => {
                       if (!user) {
@@ -486,9 +499,18 @@ export default function Cart() {
                         navigate('/auth', { state: { from: '/cart', startStep: 'details' } });
                         return;
                       }
+                      if (isAdmin) {
+                        showToast('Admins cannot place orders', 'error');
+                        return;
+                      }
                       setStep('details');
                     }}
-                    className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
+                    disabled={isAdmin}
+                    className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
+                      isAdmin 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                        : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
+                    }`}
                   >
                     {t('proceedToCheckout')}
                     <ChevronRight className="w-5 h-5" />
