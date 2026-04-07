@@ -51,10 +51,6 @@ export default function Navbar() {
           </div>
 
           <Link to="/" className="text-gray-600 hover:text-green-600 font-medium">{t('shop')}</Link>
-          <Link to="/upi-payment" className="text-gray-600 hover:text-green-600 font-medium flex items-center gap-1">
-            <CreditCard className="w-5 h-5" />
-            <span className="hidden md:inline">UPI Pay</span>
-          </Link>
           
           <button 
             onClick={() => {
@@ -86,10 +82,6 @@ export default function Navbar() {
                   <Link to="/admin" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
                     <LayoutDashboard className="w-5 h-5" />
                     <span className="hidden md:inline">{t('admin')}</span>
-                  </Link>
-                  <Link to="/admin/upi" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                    <CreditCard className="w-5 h-5" />
-                    <span className="hidden md:inline">UPI Admin</span>
                   </Link>
                 </>
               )}

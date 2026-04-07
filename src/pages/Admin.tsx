@@ -80,7 +80,12 @@ export default function Admin() {
       showToast('Image uploaded successfully', 'success');
     } catch (error) {
       console.error("Error uploading image:", error);
-      showToast('Failed to upload image', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showToast(`Failed to upload image: ${errorMessage}`, 'error');
+      
+      if (errorMessage.includes('storage/unauthorized')) {
+        showToast('Please check your Firebase Storage security rules.', 'info');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -353,50 +358,65 @@ export default function Admin() {
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-gray-700">Product Image</label>
-                      <div className="flex items-center gap-4">
-                        {productForm.image && (
-                          <div className="relative w-20 h-20 rounded-xl overflow-hidden border shrink-0">
-                            <img 
-                              src={productForm.image} 
-                              alt="Preview" 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                            <button 
-                              type="button"
-                              onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                        <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-4 transition-all cursor-pointer ${
-                          isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-green-50 hover:border-green-300 border-gray-300'
-                        }`}>
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={isUploading}
-                          />
-                          {isUploading ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
-                              <span className="text-xs font-bold text-gray-500 uppercase">Uploading...</span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-2">
-                              <Upload className="w-6 h-6 text-gray-400" />
-                              <span className="text-xs font-bold text-gray-500 uppercase">
-                                {productForm.image ? 'Change Image' : 'Upload Image'}
-                              </span>
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-4">
+                          {productForm.image && (
+                            <div className="relative w-20 h-20 rounded-xl overflow-hidden border shrink-0">
+                              <img 
+                                src={productForm.image} 
+                                alt="Preview" 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
                             </div>
                           )}
-                        </label>
+                          <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-4 transition-all cursor-pointer ${
+                            isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-green-50 hover:border-green-300 border-gray-300'
+                          }`}>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              disabled={isUploading}
+                            />
+                            {isUploading ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
+                                <span className="text-xs font-bold text-gray-500 uppercase">Uploading...</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-2">
+                                <Upload className="w-6 h-6 text-gray-400" />
+                                <span className="text-xs font-bold text-gray-500 uppercase">
+                                  {productForm.image ? 'Change Image' : 'Upload Image'}
+                                </span>
+                              </div>
+                            )}
+                          </label>
+                        </div>
+                        
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-400 text-xs font-bold">URL</span>
+                          </div>
+                          <input 
+                            type="url" 
+                            placeholder="Or paste image URL here..."
+                            className="w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                            value={productForm.image}
+                            onChange={(e) => setProductForm({...productForm, image: e.target.value})}
+                          />
+                        </div>
                       </div>
-                      <p className="text-[10px] text-gray-400 italic">Recommended: Square image, max 5MB.</p>
+                      <p className="text-[10px] text-gray-400 italic">Recommended: Square image, max 5MB. Or use a direct image link.</p>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-gray-700">Description</label>
@@ -603,9 +623,6 @@ export default function Admin() {
                                   <div>
                                     <p className="font-bold text-gray-800">Payment Method</p>
                                     <p className="text-gray-600 uppercase">{order.paymentMethod}</p>
-                                    {order.upiTransactionId && (
-                                      <p className="text-[10px] text-blue-600 font-bold mt-1">TXN: {order.upiTransactionId}</p>
-                                    )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">

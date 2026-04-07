@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2, Smartphone, Upload } from 'lucide-react';
+import { Trash2, Plus, Minus, Send, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
@@ -21,10 +21,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
-  const [upiTransactionId, setUpiTransactionId] = useState('');
-  const [hasUploadedScreenshot, setHasUploadedScreenshot] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'whatsapp'>('cod');
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
@@ -94,7 +91,7 @@ export default function Cart() {
         name: formData.name,
         phone: formData.phone,
         address: formData.address
-      }, paymentMethod, upiTransactionId);
+      }, paymentMethod);
       
       setStep('success');
       clearCart();
@@ -170,7 +167,7 @@ export default function Cart() {
             
             {[
               { id: 'details', label: t('deliveryDetails'), icon: User },
-              { id: 'payment', label: t('paymentMethod'), icon: CreditCard }
+              { id: 'payment', label: t('paymentMethod'), icon: ShoppingBag }
             ].map((s, i) => {
               const isActive = step === s.id;
               const isCompleted = ['details', 'payment'].indexOf(step) > i;
@@ -248,22 +245,7 @@ export default function Cart() {
           {step === 'payment' && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800">{t('paymentMethod')}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => setPaymentMethod('upi')}
-                  className={`p-6 rounded-3xl border-2 text-left transition-all ${
-                    paymentMethod === 'upi' ? 'border-green-600 bg-green-50 shadow-md' : 'border-gray-100 hover:border-green-200'
-                  }`}
-                >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
-                    paymentMethod === 'upi' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'
-                  }`}>
-                    <CreditCard className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-gray-800">{t('upiApps')}</h3>
-                  <p className="text-sm text-gray-500">GPay, PhonePe, etc.</p>
-                </button>
-
+              <div className="grid grid-cols-1 gap-4">
                 <button 
                   onClick={() => setPaymentMethod('cod')}
                   className={`p-6 rounded-3xl border-2 text-left transition-all ${
@@ -434,82 +416,12 @@ export default function Cart() {
 
               {step === 'payment' && (
                 <div className="flex flex-col gap-6">
-                  {paymentMethod === 'upi' && (
-                    <div className="space-y-6">
-                      <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col md:flex-row items-center gap-6">
-                        <div className="bg-white p-4 rounded-2xl shadow-sm border border-blue-100">
-                          <Smartphone className="w-12 h-12 text-blue-600" />
-                        </div>
-                        <div className="flex-grow space-y-3 text-center md:text-left">
-                          <h3 className="font-bold text-blue-900">Pay using UPI</h3>
-                          <p className="text-xs text-blue-700">Open any UPI app and pay to the merchant VPA.</p>
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const merchantVpa = "7029865930@nyes"; 
-                              const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('FreshCart Order')}`;
-                              window.location.href = upiLink;
-                              showToast(t('openingUpi'), 'info');
-                            }}
-                            className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 w-full md:w-auto"
-                          >
-                            Pay Now
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                          <button 
-                            type="button"
-                            disabled={isVerifying}
-                            onClick={() => {
-                              // Open the Google Form in a new tab
-                              window.open("https://docs.google.com/forms/d/e/1FAIpQLSeY3xwUil1wSu4mdayGC2lsUxb_2jog6OOsuEDSzuvd-fq_5Q/viewform?usp=sharing&ouid=112329330864656740398", "_blank");
-                              
-                              // Start verification simulation
-                              setIsVerifying(true);
-                              showToast("Please wait for verification. Checking your upload...", "info");
-                              
-                              // After 5 seconds, mark as verified
-                              setTimeout(() => {
-                                setIsVerifying(false);
-                                setHasUploadedScreenshot(true);
-                                showToast("Payment verified! You can now place your order.", "success");
-                              }, 5000);
-                            }}
-                            className={`px-8 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg w-full md:w-auto ${
-                              isVerifying 
-                                ? 'bg-yellow-500 text-white shadow-yellow-100' 
-                                : hasUploadedScreenshot 
-                                  ? 'bg-green-600 text-white shadow-green-100' 
-                                  : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
-                            }`}
-                          >
-                            {isVerifying ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Verifying...
-                              </>
-                            ) : hasUploadedScreenshot ? (
-                              <>
-                                <CheckCircle2 className="w-4 h-4" />
-                                Verified
-                              </>
-                            ) : (
-                              <>
-                                Upload Screenshot
-                                <Upload className="w-4 h-4" />
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   <div className="flex flex-col gap-3">
                     <button 
                       onClick={handlePlaceOrder}
-                      disabled={isAdmin || isUploading || (paymentMethod === 'upi' && !hasUploadedScreenshot)}
+                      disabled={isAdmin || isUploading}
                       className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-                        isAdmin || isUploading || (paymentMethod === 'upi' && !hasUploadedScreenshot)
+                        isAdmin || isUploading
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
                           : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
                       }`}
@@ -538,7 +450,6 @@ export default function Cart() {
             <div className="mt-8 p-4 bg-gray-50 rounded-2xl text-center">
               <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mb-2">{t('secureCheckout')}</p>
               <div className="flex justify-center gap-4 opacity-30 grayscale">
-                <CreditCard className="w-6 h-6" />
                 <ShoppingBag className="w-6 h-6" />
                 <CheckCircle2 className="w-6 h-6" />
               </div>

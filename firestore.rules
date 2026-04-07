@@ -34,16 +34,6 @@ service cloud.firestore {
     //   - displayName: string (optional)
     //   - role: string (required, 'customer' | 'admin')
     //   - createdAt: timestamp (required)
-    // Collection: upi_orders
-    // Document ID: upiOrderId
-    // Fields:
-    //   - orderId: string (required)
-    //   - userName: string (required)
-    //   - amount: number (required)
-    //   - screenshotUrl: string (required)
-    //   - status: string (required, 'pending' | 'approved' | 'rejected')
-    //   - createdAt: timestamp (required)
-    //   - userId: string (required)
     // ===============================================================
 
     // ===============================================================
@@ -87,7 +77,7 @@ service cloud.firestore {
              data.customerName is string &&
              data.customerPhone is string &&
              data.customerAddress is string &&
-             data.paymentMethod in ['upi', 'cod', 'whatsapp'] &&
+             data.paymentMethod in ['cod', 'whatsapp'] &&
              (data.get('trackingNumber', '') is string);
     }
 
@@ -100,17 +90,6 @@ service cloud.firestore {
              (data.get('phone', '') is string) &&
              (data.get('address', '') is string) &&
              (data.get('displayName', '') is string);
-    }
-
-    function isValidUpiOrder(data) {
-      return data.keys().hasAll(['orderId', 'userName', 'amount', 'screenshotUrl', 'status', 'createdAt', 'userId']) &&
-             data.orderId is string &&
-             data.userName is string &&
-             data.amount is number &&
-             data.screenshotUrl is string &&
-             data.status in ['pending', 'approved', 'rejected'] &&
-             isValidDate(data.createdAt) &&
-             data.userId is string;
     }
 
     // ===============================================================
@@ -140,15 +119,6 @@ service cloud.firestore {
       allow update: if isAuthenticated() && isValidOrder(request.resource.data) && 
                     (isAdmin() || (isOwner(resource.data.userId) && request.resource.data.status == resource.data.status)) &&
                     request.resource.data.userId == resource.data.userId;
-    }
-
-    match /upi_orders/{upiOrderId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() && isValidUpiOrder(request.resource.data) &&
-                    request.resource.data.userId == request.auth.uid &&
-                    request.resource.data.status == 'pending';
-      allow update: if isAdmin() && isValidUpiOrder(request.resource.data);
-      allow delete: if isAdmin();
     }
   }
 }

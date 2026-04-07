@@ -44,26 +44,11 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]
-    },
-    "UpiOrder": {
-      "title": "UPI Order",
-      "description": "A payment order made via UPI.",
-      "type": "object",
-      "properties": {
-        "orderId": { "type": "string" },
-        "userName": { "type": "string" },
-        "amount": { "type": "number" },
-        "screenshotUrl": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["orderId", "userName", "amount", "screenshotUrl", "status", "createdAt"]
     }
   },
   "firestore": {
     "/products/{productId}": { "schema": "Product", "description": "Collection of grocery items" },
     "/orders/{orderId}": { "schema": "Order", "description": "Collection of customer orders" },
-    "/users/{userId}": { "schema": "UserProfile", "description": "Collection of user profiles" },
-    "/upi_orders/{upiOrderId}": { "schema": "UpiOrder", "description": "Collection of UPI payment orders" }
+    "/users/{userId}": { "schema": "UserProfile", "description": "Collection of user profiles" }
   }
 }

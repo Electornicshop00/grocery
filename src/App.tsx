@@ -11,8 +11,6 @@ import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
-import UpiPayment from './pages/UpiPayment';
-import AdminUpi from './pages/AdminUpi';
 import Navbar from './components/Navbar';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
@@ -43,20 +41,11 @@ export default function App() {
                         <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                        <Route path="/upi-payment" element={<ProtectedRoute><UpiPayment /></ProtectedRoute>} />
                         <Route 
                           path="/orders" 
                           element={
                             <ProtectedRoute>
                               <Orders />
-                            </ProtectedRoute>
-                          } 
-                        />
-                        <Route 
-                          path="/admin/upi" 
-                          element={
-                            <ProtectedRoute adminOnly>
-                              <AdminUpi />
                             </ProtectedRoute>
                           } 
                         />

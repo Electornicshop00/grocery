@@ -23,17 +23,7 @@ export interface Order {
   customerPhone: string;
   customerAddress: string;
   trackingNumber?: string;
-  paymentMethod: 'upi' | 'cod' | 'whatsapp';
-  upiTransactionId?: string;
-}
-
-export interface UpiOrder {
-  id: string;
-  orderId: string;
-  userName: string;
-  amount: number;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
+  paymentMethod: 'cod' | 'whatsapp';
 }
 
 export interface UserProfile {
