@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, Timestamp, deleteDoc } from 'firebase/firestore';
-import { CheckCircle2, XCircle, Clock, Trash2, ExternalLink, Search, Filter, Loader2, CreditCard, User, Calendar, DollarSign, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, Clock, Trash2, Search, Filter, Loader2, CreditCard, User, Calendar, DollarSign, XCircle } from 'lucide-react';
 import { UpiOrder } from '../types';
 import { useToast } from '../context/ToastContext';
 
@@ -12,7 +12,6 @@ export default function AdminUpi() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, 'upi_orders'), orderBy('createdAt', 'desc'));
@@ -145,7 +144,6 @@ export default function AdminUpi() {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Order Info</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Screenshot</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -184,17 +182,6 @@ export default function AdminUpi() {
                           <DollarSign className="w-4 h-4 text-gray-400" />
                           {order.amount.toFixed(2)}
                         </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <button 
-                          onClick={() => setSelectedImage(order.screenshotUrl)}
-                          className="group relative w-12 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200"
-                        >
-                          <img src={order.screenshotUrl} alt="Proof" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <ExternalLink className="w-4 h-4 text-white" />
-                          </div>
-                        </button>
                       </td>
                       <td className="px-6 py-6">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(order.status)}`}>
@@ -250,33 +237,6 @@ export default function AdminUpi() {
       </div>
 
       {/* Image Modal */}
-      <AnimatePresence>
-        {selectedImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 md:p-10"
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-full max-h-full"
-              onClick={e => e.stopPropagation()}
-            >
-              <img src={selectedImage} alt="Full Proof" className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl border-4 border-white/10" />
-              <button 
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 text-white hover:text-green-400 transition-colors flex items-center gap-2 font-bold"
-              >
-                Close <XCircle className="w-6 h-6" />
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

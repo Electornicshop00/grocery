@@ -7,11 +7,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { Trash2, Plus, Minus, Send, CreditCard, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2, Smartphone, Upload } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { storage, db } from '../lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db } from '../lib/firebase';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
-type CheckoutStep = 'cart' | 'payment' | 'details' | 'review' | 'success';
+type CheckoutStep = 'cart' | 'payment' | 'details' | 'success';
 
 export default function Cart() {
   const { cart, total, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -23,12 +22,8 @@ export default function Cart() {
   const location = useLocation();
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('upi');
-  const [upiPaid, setUpiPaid] = useState(false);
   const [upiTransactionId, setUpiTransactionId] = useState('');
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [orderIdForUpi, setOrderIdForUpi] = useState('');
   const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -45,23 +40,7 @@ export default function Cart() {
       });
     }
     
-    // Generate a temporary order ID for UPI note
-    const timestamp = Date.now().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    setOrderIdForUpi(`ORD-${timestamp}-${random}`);
   }, [profile]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setScreenshot(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setScreenshotPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -90,7 +69,7 @@ export default function Cart() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!user || !user.emailVerified) {
+    if (!user) {
       navigate('/auth');
       return;
     }
@@ -100,45 +79,7 @@ export default function Cart() {
       return;
     }
 
-    if (paymentMethod === 'upi' && !upiPaid) {
-      const merchantVpa = "7029865930@nyes"; 
-      const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=FreshCart%20Order`;
-      
-      window.location.href = upiLink;
-      setUpiPaid(true);
-      showToast(t('openingUpi'), 'info');
-      return;
-    }
-
     try {
-      let screenshotUrl = '';
-      if (paymentMethod === 'upi' && screenshot) {
-        setIsUploading(true);
-        try {
-          const storageRef = ref(storage, `upi_screenshots/${orderIdForUpi}-${screenshot.name}`);
-          const uploadResult = await uploadBytes(storageRef, screenshot);
-          screenshotUrl = await getDownloadURL(uploadResult.ref);
-          
-          // Create an entry in upi_orders for the admin dashboard
-          await addDoc(collection(db, 'upi_orders'), {
-            orderId: orderIdForUpi,
-            userName: formData.name || user.email,
-            amount: total,
-            screenshotUrl,
-            status: 'pending',
-            createdAt: Timestamp.now(),
-            userId: user.uid
-          });
-        } catch (storageError) {
-          console.error('Storage upload error:', storageError);
-          if (storageError instanceof Error && storageError.message.includes('retry-limit-exceeded')) {
-             showToast('Storage upload failed. Please ensure Firebase Storage is enabled in your console.', 'error');
-             throw new Error('Firebase Storage is not initialized or accessible. Please check your Firebase console.');
-          }
-          throw storageError;
-        }
-      }
-
       if (profile && (!profile.displayName || !profile.phone || !profile.address)) {
         await updateUserProfile({
           displayName: profile.displayName || formData.name,
@@ -151,7 +92,7 @@ export default function Cart() {
         name: formData.name,
         phone: formData.phone,
         address: formData.address
-      }, paymentMethod, upiTransactionId, screenshotUrl);
+      }, paymentMethod, upiTransactionId);
       
       setStep('success');
       clearCart();
@@ -222,16 +163,15 @@ export default function Cart() {
           <div className="flex items-center justify-between relative">
             <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 -z-10"></div>
             <div className={`absolute top-1/2 left-0 h-1 bg-green-500 -translate-y-1/2 -z-10 transition-all duration-500`} style={{ 
-              width: step === 'details' ? '0%' : step === 'payment' ? '50%' : '100%' 
+              width: step === 'details' ? '0%' : '100%' 
             }}></div>
             
             {[
               { id: 'details', label: t('deliveryDetails'), icon: User },
-              { id: 'payment', label: t('paymentMethod'), icon: CreditCard },
-              { id: 'review', label: t('reviewOrder'), icon: CheckCircle2 }
+              { id: 'payment', label: t('paymentMethod'), icon: CreditCard }
             ].map((s, i) => {
               const isActive = step === s.id;
-              const isCompleted = ['details', 'payment', 'review'].indexOf(step) > i;
+              const isCompleted = ['details', 'payment'].indexOf(step) > i;
               return (
                 <div key={s.id} className="flex flex-col items-center gap-2">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
@@ -402,69 +342,6 @@ export default function Cart() {
               </div>
             </div>
           )}
-
-          {step === 'review' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800">{t('reviewOrder')}</h2>
-              <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
-                <div className="p-6 bg-gray-50 border-b flex justify-between items-center">
-                  <h3 className="font-bold text-gray-800">Order Items</h3>
-                  <button onClick={() => setStep('cart')} className="text-green-600 font-bold text-sm hover:underline">Edit</button>
-                </div>
-                <div className="divide-y">
-                  {cart.map(item => (
-                    <div key={item.id} className="p-4 flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <span className="bg-green-100 text-green-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">{item.quantity}</span>
-                        <span className="font-medium text-gray-800">{item.name}</span>
-                      </div>
-                      <span className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-6 bg-green-50 border-t flex justify-between items-center">
-                  <span className="font-bold text-green-800">{t('total')}</span>
-                  <span className="text-2xl font-extrabold text-green-700">₹{total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800">{t('deliveryDetails')}</h3>
-                    <button onClick={() => setStep('details')} className="text-green-600 font-bold text-sm hover:underline">Edit</button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-gray-500">{t('recipient')}</p>
-                    <p className="font-bold text-gray-800">{formData.name}</p>
-                    <p className="text-gray-500 mt-2">{t('address')}</p>
-                    <p className="text-gray-800 leading-relaxed">{formData.address}</p>
-                    <p className="text-gray-500 mt-2">{t('phone')}</p>
-                    <p className="text-gray-800">{formData.phone}</p>
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border shadow-sm space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-800">{t('paymentMethod')}</h3>
-                    <button onClick={() => setStep('payment')} className="text-green-600 font-bold text-sm hover:underline">Edit</button>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl border">
-                    <div className="bg-green-600 text-white p-2 rounded-xl">
-                      {paymentMethod === 'upi' ? <CreditCard className="w-5 h-5" /> : <ShoppingBag className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-800">
-                        {paymentMethod === 'upi' ? t('upiApps') : t('cod')}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {paymentMethod === 'upi' ? 'GPay, PhonePe, etc.' : t('payAtDelivery')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="space-y-6">
@@ -497,14 +374,6 @@ export default function Cart() {
                       </p>
                     </div>
                   )}
-                  {user && !user.emailVerified && (
-                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl mb-4 flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-700 leading-relaxed">
-                        {t('verifyEmail')}
-                      </p>
-                    </div>
-                  )}
                   {isAdmin && (
                     <div className="bg-red-50 border border-red-100 p-4 rounded-2xl mb-4 flex items-start gap-3">
                       <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
@@ -517,11 +386,6 @@ export default function Cart() {
                     onClick={() => {
                       if (!user) {
                         showToast('Please login to place an order', 'info');
-                        navigate('/auth', { state: { from: '/cart', startStep: 'details' } });
-                        return;
-                      }
-                      if (!user.emailVerified) {
-                        showToast(t('verifyEmail'), 'info');
                         navigate('/auth', { state: { from: '/cart', startStep: 'details' } });
                         return;
                       }
@@ -576,63 +440,37 @@ export default function Cart() {
                         </div>
                         <div className="flex-grow space-y-3 text-center md:text-left">
                           <h3 className="font-bold text-blue-900">Pay using UPI</h3>
-                          <p className="text-xs text-blue-700">Open any UPI app and pay to the merchant VPA. Include Order ID <span className="font-mono font-bold">{orderIdForUpi}</span> in note.</p>
+                          <p className="text-xs text-blue-700">Open any UPI app and pay to the merchant VPA.</p>
                           <button 
                             type="button"
                             onClick={() => {
                               const merchantVpa = "7029865930@nyes"; 
-                              const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Order ' + orderIdForUpi)}`;
+                              const upiLink = `upi://pay?pa=${merchantVpa}&pn=FreshCart&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent('FreshCart Order')}`;
                               window.location.href = upiLink;
                               showToast(t('openingUpi'), 'info');
-                              setUpiPaid(true);
                             }}
                             className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100 w-full md:w-auto"
                           >
                             Pay Now
                             <ChevronRight className="w-4 h-4" />
                           </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-green-600 font-bold">
-                          <Upload className="w-5 h-5" />
-                          <h2>Upload Payment Screenshot</h2>
-                        </div>
-                        
-                        <div className="relative">
-                          <input 
-                            type="file" 
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            id="screenshot-upload"
-                          />
-                          <label 
-                            htmlFor="screenshot-upload"
-                            className={`w-full border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all ${
-                              screenshotPreview ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'
-                            }`}
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              // Open the Google Form in a new tab
+                              window.open("https://docs.google.com/forms/d/e/1FAIpQLSeY3xwUil1wSu4mdayGC2lsUxb_2jog6OOsuEDSzuvd-fq_5Q/viewform?usp=sharing&ouid=112329330864656740398", "_blank");
+                              
+                              // Show the verification message
+                              showToast("Please wait for verification. Your order is being placed.", "info");
+                              
+                              // Place the order and redirect to success step
+                              handlePlaceOrder();
+                            }}
+                            className="bg-green-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100 w-full md:w-auto"
                           >
-                            {screenshotPreview ? (
-                              <div className="relative w-full max-w-[150px] aspect-[9/16] rounded-xl overflow-hidden shadow-lg">
-                                <img src={screenshotPreview} alt="Preview" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                  <p className="text-white text-[10px] font-bold">Change Image</p>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="w-12 h-12 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center">
-                                  <Upload className="w-6 h-6" />
-                                </div>
-                                <div className="text-center">
-                                  <p className="font-bold text-gray-700 text-sm">Upload Screenshot</p>
-                                  <p className="text-[10px] text-gray-500 mt-1">Take a screenshot of the success screen</p>
-                                </div>
-                              </>
-                            )}
-                          </label>
+                            Upload Screenshot
+                            <Upload className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -640,66 +478,31 @@ export default function Cart() {
 
                   <div className="flex flex-col gap-3">
                     <button 
-                      onClick={() => {
-                        if (paymentMethod === 'upi' && !screenshot) {
-                          showToast('Please upload a payment screenshot', 'error');
-                          return;
-                        }
-                        setStep('review');
-                      }}
-                      className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-100"
+                      onClick={handlePlaceOrder}
+                      disabled={isAdmin || isUploading}
+                      className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
+                        isAdmin || isUploading
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                          : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
+                      }`}
                     >
-                      {t('nextReview')}
-                      <ChevronRight className="w-5 h-5" />
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          {t('processing')}...
+                        </>
+                      ) : (
+                        <>
+                          {t('placeOrder')}
+                          <CheckCircle2 className="w-5 h-5" />
+                        </>
+                      )}
                     </button>
                     <button onClick={() => setStep('details')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                       <ChevronLeft className="w-4 h-4" />
                       {t('backToDetails')}
                     </button>
                   </div>
-                </div>
-              )}
-
-              {step === 'review' && (
-                <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={handlePlaceOrder}
-                    disabled={isAdmin || (paymentMethod === 'upi' && !screenshot) || isUploading}
-                    className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-                      isAdmin || (paymentMethod === 'upi' && !screenshot) || isUploading
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
-                        : 'bg-green-600 text-white hover:bg-green-700 shadow-green-100'
-                    }`}
-                  >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        Uploading Proof...
-                      </>
-                    ) : (
-                      <>
-                        {t('placeOrder')}
-                        <CheckCircle2 className="w-5 h-5" />
-                      </>
-                    )}
-                  </button>
-                  
-                  {paymentMethod === 'upi' && screenshot && (
-                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-blue-700 leading-relaxed">
-                        Screenshot attached. Clicking "Place Order" will upload your proof and submit your order for verification.
-                      </p>
-                    </div>
-                  )}
-
-                  <button onClick={() => {
-                    setStep('payment');
-                    setUpiPaid(false);
-                  }} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
-                    <ChevronLeft className="w-4 h-4" />
-                    {t('backToPayment')}
-                  </button>
                 </div>
               )}
             </div>

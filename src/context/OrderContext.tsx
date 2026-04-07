@@ -68,7 +68,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 interface OrderContextType {
   orders: Order[];
   userOrders: Order[];
-  placeOrder: (items: CartItem[], total: number, customerDetails: { name: string; phone: string; address: string }, paymentMethod: Order['paymentMethod'], upiTransactionId?: string, screenshotUrl?: string) => Promise<void>;
+  placeOrder: (items: CartItem[], total: number, customerDetails: { name: string; phone: string; address: string }, paymentMethod: Order['paymentMethod'], upiTransactionId?: string) => Promise<void>;
   updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
   updateTrackingNumber: (orderId: string, trackingNumber: string) => Promise<void>;
   loading: boolean;
@@ -84,7 +84,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Fetch all orders for admin
   useEffect(() => {
-    if (!user || !user.emailVerified || !isAdmin) {
+    if (!user || !isAdmin) {
       setOrders([]);
       return;
     }
@@ -141,8 +141,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     total: number, 
     customerDetails: { name: string; phone: string; address: string },
     paymentMethod: Order['paymentMethod'],
-    upiTransactionId?: string,
-    screenshotUrl?: string
+    upiTransactionId?: string
   ) => {
     if (!user) throw new Error('Must be logged in to place an order');
     if (isAdmin) throw new Error('Administrators cannot place orders');
@@ -157,8 +156,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       customerPhone: customerDetails.phone,
       customerAddress: customerDetails.address,
       paymentMethod,
-      upiTransactionId: upiTransactionId || null,
-      screenshotUrl: screenshotUrl || null
+      upiTransactionId: upiTransactionId || null
     };
 
     try {

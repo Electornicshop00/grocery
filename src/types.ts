@@ -25,7 +25,6 @@ export interface Order {
   trackingNumber?: string;
   paymentMethod: 'upi' | 'cod' | 'whatsapp';
   upiTransactionId?: string;
-  screenshotUrl?: string;
 }
 
 export interface UpiOrder {
@@ -33,7 +32,6 @@ export interface UpiOrder {
   orderId: string;
   userName: string;
   amount: number;
-  screenshotUrl: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
