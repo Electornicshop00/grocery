@@ -112,13 +112,13 @@ export default function Auth() {
   if (showVerification) {
     return (
       <div className="max-w-md mx-auto mt-12 px-4">
-        <div className="p-8 rounded-3xl shadow-xl border border-white/10 text-center" style={{ background: 'linear-gradient(90deg, #08203E, #557C93)' }}>
-          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-white" />
+        <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 text-center bg-white dark:bg-gray-900 transition-colors duration-300">
+          <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-4">{t('verifyEmail')}</h1>
-          <p className="text-white/80 mb-8">
-            We have sent you a verification email to <span className="font-bold text-white">{email}</span>. 
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">{t('verifyEmail')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            We have sent you a verification email to <span className="font-bold text-gray-800 dark:text-white">{email}</span>. 
             Please verify it and log in.
           </p>
           <div className="space-y-4">
@@ -145,14 +145,14 @@ export default function Auth() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-12 px-4">
-      <div className="p-8 rounded-3xl shadow-xl border border-white/10" style={{ background: 'linear-gradient(90deg, #08203E, #557C93)' }}>
+    <div className="max-w-md mx-auto mt-8 md:mt-12 px-4">
+      <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-300">
         <div className="text-center mb-8">
-          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {isLogin ? <LogIn className="w-8 h-8 text-white" /> : <UserPlus className="w-8 h-8 text-white" />}
+          <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            {isLogin ? <LogIn className="w-8 h-8 text-green-600 dark:text-green-400" /> : <UserPlus className="w-8 h-8 text-green-600 dark:text-green-400" />}
           </div>
-          <h1 className="text-3xl font-bold text-white">{isLogin ? t('login') : t('signup')}</h1>
-          <p className="text-white/60 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{isLogin ? t('login') : t('signup')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
         </div>
 
         {error && (
@@ -169,7 +169,7 @@ export default function Auth() {
                 required
                 type="text" 
                 placeholder={t('fullName')}
-                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -181,7 +181,7 @@ export default function Auth() {
               required
               type="email" 
               placeholder="Email Address"
-              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full pl-10 pr-4 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -192,7 +192,7 @@ export default function Auth() {
               required
               type={showPassword ? 'text' : 'password'} 
               placeholder="Password"
-              className="w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full pl-10 pr-12 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -214,11 +214,11 @@ export default function Auth() {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-white/60">
+        <p className="text-center mt-8 text-gray-500 dark:text-gray-400">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="ml-2 text-white font-bold hover:underline"
+            className="ml-2 text-green-600 dark:text-green-400 font-bold hover:underline"
           >
             {isLogin ? t('signup') : t('login')}
           </button>

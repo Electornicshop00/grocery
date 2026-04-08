@@ -113,10 +113,10 @@ export default function Orders() {
           const isExpanded = expandedOrders.has(order.id);
           
           return (
-            <div key={order.id} className="bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md">
+            <div key={order.id} className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden transition-all duration-300 hover:shadow-md">
               <div 
                 onClick={() => toggleOrderExpansion(order.id)}
-                className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${statusStyle.bg} ${statusStyle.text}`}>

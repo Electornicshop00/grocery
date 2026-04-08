@@ -46,8 +46,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow group">
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
+    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border dark:border-gray-800 overflow-hidden hover:shadow-md transition-all group">
+      <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800">
         <img 
           src={product.image || `https://picsum.photos/seed/${product.id}/400/400`} 
           alt={product.name}
@@ -61,33 +61,33 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
 
-      <div className="p-4">
+      <div className="p-3 md:p-4">
         <div className="flex justify-between items-start mb-1">
-          <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">{product.category}</span>
-          <span className="text-xs text-gray-500">Stock: {product.stock}</span>
+          <span className="text-[10px] md:text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wider">{product.category}</span>
+          <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">Stock: {product.stock}</span>
         </div>
-        <h3 className="font-bold text-gray-800 text-lg mb-2 truncate">{product.name}</h3>
-        <p className="text-gray-500 text-sm mb-4 line-clamp-2 h-10">{product.description}</p>
+        <h3 className="font-bold text-gray-800 dark:text-white text-sm md:text-lg mb-1 md:mb-2 truncate">{product.name}</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-[10px] md:text-sm mb-3 md:mb-4 line-clamp-2 h-8 md:h-10">{product.description}</p>
         
         <div className="flex flex-col gap-2 mt-auto">
-          <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-green-700">₹{product.price.toFixed(2)}</span>
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-base md:text-xl font-bold text-green-700 dark:text-green-500">₹{product.price.toFixed(2)}</span>
             
             {cartItem ? (
-              <div className="flex items-center gap-2 bg-green-50 rounded-lg p-1 border border-green-200">
+              <div className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 rounded-lg p-0.5 md:p-1 border border-green-200 dark:border-green-800">
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="p-1 hover:bg-green-100 rounded text-green-700"
+                  className="p-0.5 md:p-1 hover:bg-green-100 dark:hover:bg-green-800 rounded text-green-700 dark:text-green-400"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
-                <span className="w-6 text-center font-bold text-green-800">{cartItem.quantity}</span>
+                <span className="w-4 md:w-6 text-center text-xs md:text-base font-bold text-green-800 dark:text-green-200">{cartItem.quantity}</span>
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="p-1 hover:bg-green-100 rounded text-green-700"
+                  className="p-0.5 md:p-1 hover:bg-green-100 dark:hover:bg-green-800 rounded text-green-700 dark:text-green-400"
                   disabled={cartItem.quantity >= product.stock}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
               </div>
             ) : (
@@ -95,14 +95,15 @@ export default function ProductCard({ product }: ProductCardProps) {
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors",
+                  "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-base",
                   product.stock > 0 
                     ? "bg-green-600 text-white hover:bg-green-700" 
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                 )}
               >
-                <ShoppingCart className="w-4 h-4" />
-                {t('addToCart').split(' ')[0]}
+                <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">{t('addToCart').split(' ')[0]}</span>
+                <span className="sm:hidden">+</span>
               </button>
             )}
           </div>
@@ -111,13 +112,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             onClick={handleBuyNow}
             disabled={product.stock <= 0}
             className={cn(
-              "w-full flex items-center justify-center gap-2 py-2 rounded-lg font-bold transition-all",
+              "w-full flex items-center justify-center gap-1 md:gap-2 py-1.5 md:py-2 rounded-lg font-bold transition-all text-xs md:text-base",
               product.stock > 0 
                 ? "bg-amber-500 text-white hover:bg-amber-600 shadow-sm" 
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
             )}
           >
-            <CreditCard className="w-4 h-4" />
+            <CreditCard className="w-3 h-3 md:w-4 md:h-4" />
             {t('checkout')}
           </button>
         </div>

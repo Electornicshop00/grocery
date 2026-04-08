@@ -53,7 +53,7 @@ export default function Profile() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
       >
         <div className="bg-green-600 p-8 text-white">
           <div className="flex items-center gap-4">
@@ -71,13 +71,13 @@ export default function Profile() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <User className="w-4 h-4" /> Full Name
                 </label>
                 <input 
                   type="text"
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-400 transition-all bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   placeholder="Enter your full name"
@@ -85,13 +85,13 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Phone className="w-4 h-4" /> Phone Number
                 </label>
                 <input 
                   type="tel"
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-400 transition-all bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="Enter your phone number"
@@ -99,13 +99,13 @@ export default function Profile() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <MapPin className="w-4 h-4" /> Delivery Address
                 </label>
                 <textarea 
                   disabled={!isEditing}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border dark:border-gray-700 focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-500 dark:disabled:text-gray-400 transition-all resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-white"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Enter your delivery address"

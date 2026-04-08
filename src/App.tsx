@@ -36,7 +36,7 @@ export default function App() {
             <OrderProvider>
               <Router>
                 <LanguageProvider>
-                  <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col pb-16 transition-colors duration-300">
+                  <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col pb-16 transition-colors duration-300">
                     <Navbar />
                     <main className="flex-grow container mx-auto px-4 py-8">
                       <Routes>

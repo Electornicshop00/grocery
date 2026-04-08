@@ -29,15 +29,15 @@ export default function Home() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative rounded-3xl overflow-hidden bg-green-600 text-white p-8 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="space-y-6 max-w-xl">
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+      <div className="relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-6 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 border dark:border-gray-800 shadow-sm">
+        <div className="space-y-4 md:space-y-6 max-w-xl text-center md:text-left">
+          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight text-green-600">
             {t('shop')} <br /> {t('thankYou').split('.')[0]}
           </h1>
-          <p className="text-lg text-green-100">
+          <p className="text-base md:text-lg text-gray-600 dark:text-gray-400">
             {t('thankYou')}
           </p>
-          <button className="bg-white text-green-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-green-50 transition-colors flex items-center gap-2">
+          <button className="bg-green-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full font-bold text-base md:text-lg hover:bg-green-700 transition-colors flex items-center gap-2 mx-auto md:mx-0 shadow-lg shadow-green-200 dark:shadow-none">
             <ShoppingBag className="w-5 h-5" />
             {t('startShopping')}
           </button>
@@ -46,26 +46,26 @@ export default function Home() {
           <img 
             src="https://picsum.photos/seed/grocery-hero/600/600" 
             alt="Hero" 
-            className="rounded-2xl shadow-2xl rotate-3"
+            className="rounded-2xl shadow-xl rotate-3 border-4 border-white dark:border-gray-800"
             referrerPolicy="no-referrer"
           />
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border">
+      {/* Filters & Search - Sticky */}
+      <div className="sticky top-16 z-40 flex flex-col md:flex-row gap-2 md:gap-4 items-center justify-between bg-white dark:bg-gray-900 p-3 md:p-4 rounded-xl shadow-md border dark:border-gray-800 transition-all duration-300">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input 
             type="text" 
             placeholder={t('searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            className="w-full pl-10 pr-4 py-2 border dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
           <Filter className="text-gray-400 w-5 h-5 shrink-0" />
           {categories.map(category => (
             <button
@@ -74,7 +74,7 @@ export default function Home() {
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === category 
                   ? 'bg-green-600 text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               {category === 'All' ? t('all') : category}
@@ -84,7 +84,7 @@ export default function Home() {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
         {filteredProducts.map(product => (
           <ProductCard key={product.id} product={product} />
         ))}

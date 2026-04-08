@@ -117,15 +117,15 @@ export default function Cart() {
           <h2 className="text-4xl font-bold text-gray-800">{t('orderConfirmed')}</h2>
           <p className="text-xl text-gray-500">{t('thankYou')}</p>
         </div>
-        <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6 text-left">
-          <div className="flex justify-between items-center border-b pb-4">
-            <span className="text-gray-500 font-medium">{t('orderStatus')}</span>
-            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">{t('processing')}</span>
+        <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl border dark:border-gray-800 shadow-sm space-y-6 text-left">
+          <div className="flex justify-between items-center border-b dark:border-gray-800 pb-4">
+            <span className="text-gray-500 dark:text-gray-400 font-medium">{t('orderStatus')}</span>
+            <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">{t('processing')}</span>
           </div>
           <div className="space-y-2">
-            <p className="text-sm font-bold text-gray-400 uppercase">{t('deliveryTo')}</p>
-            <p className="font-bold text-gray-800">{formData.name}</p>
-            <p className="text-gray-600">{formData.address}</p>
+            <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase">{t('deliveryTo')}</p>
+            <p className="font-bold text-gray-800 dark:text-white">{formData.name}</p>
+            <p className="text-gray-600 dark:text-gray-400">{formData.address}</p>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -172,15 +172,15 @@ export default function Cart() {
               const isActive = step === s.id;
               const isCompleted = ['details', 'payment'].indexOf(step) > i;
               return (
-                <div key={s.id} className="flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${
+                <div key={s.id} className="flex flex-col items-center gap-1 md:gap-2">
+                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 md:border-4 transition-all duration-300 ${
                     isActive ? 'bg-white border-green-500 text-green-600 scale-110' : 
                     isCompleted ? 'bg-green-500 border-green-500 text-white' : 
                     'bg-white border-gray-200 text-gray-400'
                   }`}>
-                    <s.icon className="w-5 h-5" />
+                    <s.icon className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-green-600' : 'text-gray-400'}`}>{s.label}</span>
+                  <span className={`text-[10px] md:text-xs font-bold uppercase tracking-wider text-center max-w-[80px] md:max-w-none ${isActive ? 'text-green-600' : 'text-gray-400'}`}>{s.label}</span>
                 </div>
               );
             })}
@@ -197,32 +197,32 @@ export default function Cart() {
                 {t('cart')}
               </h1>
 
-              <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                <div className="divide-y">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
+                <div className="divide-y dark:divide-gray-800">
                   {cart.map(item => (
                     <div key={item.id} className="p-4 md:p-6 flex gap-4 md:gap-6 items-center">
                       <img 
                         src={item.image || `https://picsum.photos/seed/${item.id}/200/200`} 
                         alt={item.name}
-                        className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg border"
+                        className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg border dark:border-gray-700"
                         referrerPolicy="no-referrer"
                       />
                       <div className="flex-grow min-w-0">
-                        <h3 className="font-bold text-gray-800 md:text-lg truncate">{item.name}</h3>
-                        <p className="text-sm text-gray-500 mb-2">{item.category}</p>
+                        <h3 className="font-bold text-gray-800 dark:text-white md:text-lg truncate">{item.name}</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{item.category}</p>
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-green-700 md:text-lg">₹{item.price.toFixed(2)}</span>
-                          <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border">
+                          <span className="font-bold text-green-700 dark:text-green-500 md:text-lg">₹{item.price.toFixed(2)}</span>
+                          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-1 border dark:border-gray-700">
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="p-1 hover:bg-gray-200 rounded text-gray-600"
+                              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
-                            <span className="w-6 text-center font-bold text-gray-800">{item.quantity}</span>
+                            <span className="w-6 text-center font-bold text-gray-800 dark:text-white">{item.quantity}</span>
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="p-1 hover:bg-gray-200 rounded text-gray-600"
+                              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -231,7 +231,7 @@ export default function Cart() {
                       </div>
                       <button 
                         onClick={() => removeFromCart(item.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
@@ -390,21 +390,21 @@ export default function Cart() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl shadow-sm border p-8 sticky top-24">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Order Summary</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border dark:border-gray-800 p-8 sticky top-24">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">Order Summary</h2>
             
             <div className="space-y-4 mb-8">
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-gray-500 dark:text-gray-400">
                 <span>Subtotal</span>
-                <span className="font-bold text-gray-800">₹{total.toFixed(2)}</span>
+                <span className="font-bold text-gray-800 dark:text-white">₹{total.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-500">
+              <div className="flex justify-between text-gray-500 dark:text-gray-400">
                 <span>Delivery Fee</span>
-                <span className="text-green-600 font-bold">FREE</span>
+                <span className="text-green-600 dark:text-green-400 font-bold">FREE</span>
               </div>
-              <div className="border-t border-dashed pt-4 flex justify-between text-2xl font-extrabold text-gray-800">
+              <div className="border-t dark:border-gray-800 border-dashed pt-4 flex justify-between text-2xl font-extrabold text-gray-800 dark:text-white">
                 <span>Total</span>
-                <span className="text-green-700">₹{total.toFixed(2)}</span>
+                <span className="text-green-700 dark:text-green-500">₹{total.toFixed(2)}</span>
               </div>
             </div>
 
