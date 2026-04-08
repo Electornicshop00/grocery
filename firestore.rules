@@ -124,6 +124,7 @@ service cloud.firestore {
                        request.resource.data.status == resource.data.status)
                     ) &&
                     request.resource.data.userId == resource.data.userId;
+      allow delete: if isAdmin();
     }
   }
 }

@@ -19,7 +19,7 @@
 
 @layer base {
   body {
-    @apply font-sans text-gray-900 antialiased;
+    @apply font-sans text-gray-900 antialiased min-h-screen;
   }
   
   h1, h2, h3, h4, h5, h6 {

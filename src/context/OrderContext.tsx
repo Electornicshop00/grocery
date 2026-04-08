@@ -6,6 +6,8 @@ import {
   onSnapshot, 
   addDoc, 
   updateDoc, 
+  deleteDoc,
+  writeBatch,
   doc, 
   orderBy,
   Timestamp
@@ -71,6 +73,8 @@ interface OrderContextType {
   placeOrder: (items: CartItem[], total: number, customerDetails: { name: string; phone: string; address: string }, paymentMethod: Order['paymentMethod']) => Promise<void>;
   updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
   updateTrackingNumber: (orderId: string, trackingNumber: string) => Promise<void>;
+  deleteOrder: (orderId: string) => Promise<void>;
+  deleteMultipleOrders: (orderIds: string[]) => Promise<void>;
   loading: boolean;
 }
 
@@ -182,8 +186,33 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const deleteOrder = async (orderId: string) => {
+    if (!isAdmin) throw new Error('Only admins can delete orders');
+    const orderRef = doc(db, 'orders', orderId);
+    try {
+      await deleteDoc(orderRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `orders/${orderId}`);
+    }
+  };
+
+  const deleteMultipleOrders = async (orderIds: string[]) => {
+    if (!isAdmin) throw new Error('Only admins can delete orders');
+    const batch = writeBatch(db);
+    
+    orderIds.forEach(id => {
+      batch.delete(doc(db, 'orders', id));
+    });
+
+    try {
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'orders/batch-delete');
+    }
+  };
+
   return (
-    <OrderContext.Provider value={{ orders, userOrders, placeOrder, updateOrderStatus, updateTrackingNumber, loading }}>
+    <OrderContext.Provider value={{ orders, userOrders, placeOrder, updateOrderStatus, updateTrackingNumber, deleteOrder, deleteMultipleOrders, loading }}>
       {children}
     </OrderContext.Provider>
   );

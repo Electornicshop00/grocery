@@ -111,14 +111,14 @@ export default function Auth() {
 
   if (showVerification) {
     return (
-      <div className="max-w-md mx-auto mt-12">
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 text-center">
-          <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-blue-600" />
+      <div className="max-w-md mx-auto mt-12 px-4">
+        <div className="p-8 rounded-3xl shadow-xl border border-white/10 text-center" style={{ background: 'linear-gradient(90deg, #08203E, #557C93)' }}>
+          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">{t('verifyEmail')}</h1>
-          <p className="text-gray-600 mb-8">
-            We have sent you a verification email to <span className="font-bold text-gray-800">{email}</span>. 
+          <h1 className="text-3xl font-bold text-white mb-4">{t('verifyEmail')}</h1>
+          <p className="text-white/80 mb-8">
+            We have sent you a verification email to <span className="font-bold text-white">{email}</span>. 
             Please verify it and log in.
           </p>
           <div className="space-y-4">
@@ -145,14 +145,14 @@ export default function Auth() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-12">
-      <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+    <div className="max-w-md mx-auto mt-12 px-4">
+      <div className="p-8 rounded-3xl shadow-xl border border-white/10" style={{ background: 'linear-gradient(90deg, #08203E, #557C93)' }}>
         <div className="text-center mb-8">
-          <div className="bg-green-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {isLogin ? <LogIn className="w-8 h-8 text-green-600" /> : <UserPlus className="w-8 h-8 text-green-600" />}
+          <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            {isLogin ? <LogIn className="w-8 h-8 text-white" /> : <UserPlus className="w-8 h-8 text-white" />}
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">{isLogin ? t('login') : t('signup')}</h1>
-          <p className="text-gray-500 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
+          <h1 className="text-3xl font-bold text-white">{isLogin ? t('login') : t('signup')}</h1>
+          <p className="text-white/60 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
         </div>
 
         {error && (
@@ -214,11 +214,11 @@ export default function Auth() {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-gray-600">
+        <p className="text-center mt-8 text-white/60">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="ml-2 text-green-600 font-bold hover:underline"
+            className="ml-2 text-white font-bold hover:underline"
           >
             {isLogin ? t('signup') : t('login')}
           </button>

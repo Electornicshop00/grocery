@@ -36,10 +36,22 @@ export default function Admin() {
   const { showToast } = useToast();
   const { isAdmin, loading: authLoading } = useAuth();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
-  const { orders, updateOrderStatus, updateTrackingNumber, loading: ordersLoading } = useOrders();
+  const { orders, updateOrderStatus, updateTrackingNumber, deleteOrder, deleteMultipleOrders, loading: ordersLoading } = useOrders();
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -114,10 +126,19 @@ export default function Admin() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProduct(id);
-      showToast('Product deleted', 'success');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Product',
+      message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deleteProduct(id);
+          showToast('Product deleted successfully', 'success');
+        } catch (error) {
+          showToast('Failed to delete product', 'error');
+        }
+      }
+    });
   };
 
   const handleOrderStatusChange = async (id: string, status: Order['status']) => {
@@ -158,6 +179,66 @@ export default function Admin() {
       newExpanded.add(orderId);
     }
     setExpandedOrders(newExpanded);
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    const newSelected = new Set(selectedOrders);
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId);
+    } else {
+      newSelected.add(orderId);
+    }
+    setSelectedOrders(newSelected);
+  };
+
+  const toggleSelectAllOrders = () => {
+    if (orders.length === 0) return;
+    if (selectedOrders.size === orders.length) {
+      setSelectedOrders(new Set());
+    } else {
+      setSelectedOrders(new Set(orders.map(o => o.id)));
+    }
+  };
+
+  const handleDeleteSelectedOrders = async () => {
+    if (selectedOrders.size === 0) return;
+    const count = selectedOrders.size;
+    
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Multiple Orders',
+      message: `Are you sure you want to delete ${count} selected orders? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await deleteMultipleOrders(Array.from(selectedOrders));
+          showToast(`${count} orders deleted successfully`, 'success');
+          setSelectedOrders(new Set());
+        } catch (error) {
+          console.error("Error deleting orders:", error);
+          showToast(`Failed to delete orders: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+        }
+      }
+    });
+  };
+
+  const handleDeleteSingleOrder = async (e: React.MouseEvent, orderId: string) => {
+    e.stopPropagation();
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Order',
+      message: 'Are you sure you want to delete this order? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          await deleteOrder(orderId);
+          showToast('Order deleted successfully', 'success');
+          const newSelected = new Set(selectedOrders);
+          newSelected.delete(orderId);
+          setSelectedOrders(newSelected);
+        } catch (error) {
+          showToast('Failed to delete order', 'error');
+        }
+      }
+    });
   };
 
   const stats = [
@@ -524,18 +605,51 @@ export default function Admin() {
         </div>
       ) : (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-800">Order History</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-2xl font-bold text-gray-800">Order History</h2>
+            <div className="flex items-center gap-3">
+              {selectedOrders.size > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={handleDeleteSelectedOrders}
+                  className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Selected ({selectedOrders.size})
+                </motion.button>
+              )}
+              <button
+                onClick={toggleSelectAllOrders}
+                className="text-sm font-bold text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                {selectedOrders.size === orders.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+          </div>
           <div className="space-y-4">
             {orders.map(order => {
               const statusStyle = getStatusStyles(order.status);
               const isExpanded = expandedOrders.has(order.id);
+              const isSelected = selectedOrders.has(order.id);
               return (
-                <div key={order.id} className="bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md">
+                <div key={order.id} className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${isSelected ? 'border-green-500 ring-1 ring-green-500' : ''}`}>
                   <div 
                     onClick={() => toggleOrderExpansion(order.id)}
                     className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleOrderSelection(order.id);
+                        }}
+                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+                          isSelected ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300 hover:border-green-500'
+                        }`}
+                      >
+                        {isSelected && <CheckCircle className="w-4 h-4" />}
+                      </div>
                       <div className={`p-3 rounded-xl ${statusStyle.bg} ${statusStyle.text}`}>
                         <statusStyle.icon className="w-6 h-6" />
                       </div>
@@ -550,6 +664,13 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={(e) => handleDeleteSingleOrder(e, order.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete Order"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                       <div className="relative">
                         <select 
                           value={order.status}
@@ -698,6 +819,51 @@ export default function Admin() {
       )}
 
       {/* Product List */}
+      <ConfirmationModal 
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+    </div>
+  );
+}
+
+function ConfirmationModal({ isOpen, title, message, onConfirm, onClose }: any) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border"
+      >
+        <div className="flex items-center gap-4 mb-6 text-red-600">
+          <div className="p-3 bg-red-50 rounded-2xl">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h3 className="text-2xl font-bold">{title}</h3>
+        </div>
+        <p className="text-gray-600 mb-8 leading-relaxed">{message}</p>
+        <div className="flex gap-4">
+          <button 
+            onClick={onClose}
+            className="flex-1 px-6 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="flex-1 px-6 py-4 rounded-2xl font-bold bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
+          >
+            Confirm
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 }
