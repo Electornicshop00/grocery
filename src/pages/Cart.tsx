@@ -282,20 +282,42 @@ export default function Cart() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="bg-white p-6 rounded-3xl border-2 border-green-100 flex flex-col items-center gap-4"
+                      className="bg-white p-6 rounded-3xl border-2 border-green-100 flex flex-col items-center gap-6"
                     >
-                      <p className="text-sm font-bold text-green-800 uppercase tracking-wider">{t('scanToPay')}</p>
-                      <div className="bg-white p-4 rounded-2xl border shadow-sm">
-                        <img 
-                          src="https://roasted-lavender-h2bzsr9y86.edgeone.app/IMG_20260406_134936.png" 
-                          alt="UPI QR Code"
-                          className="w-48 h-48 object-contain"
-                          referrerPolicy="no-referrer"
-                        />
+                      <div className="w-full space-y-4">
+                        <a 
+                          href={`upi://pay?pa=702986593@ybl&pn=FreshCart&am=${total}&cu=INR&tn=Order%20Payment`}
+                          className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold hover:bg-green-700 transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98]"
+                        >
+                          <CreditCard className="w-6 h-6" />
+                          {t('payWithUpiApp')}
+                        </a>
+                        
+                        <div className="relative flex items-center justify-center py-2">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-100"></div>
+                          </div>
+                          <span className="relative bg-white px-4 text-xs font-bold text-gray-400 uppercase tracking-widest">OR</span>
+                        </div>
+
+                        <div className="flex flex-col items-center gap-4">
+                          <p className="text-sm font-bold text-green-800 uppercase tracking-wider">{t('scanToPay')}</p>
+                          <div className="bg-white p-4 rounded-2xl border shadow-sm">
+                            <img 
+                              src="https://roasted-lavender-h2bzsr9y86.edgeone.app/IMG_20260406_134936.png" 
+                              alt="UPI QR Code"
+                              className="w-48 h-48 object-contain"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-gray-800">UPI ID: 702986593@ybl</p>
+                            <p className="text-xs text-gray-500 mt-2 px-4">
+                              After payment, click "Place Order" below. We will verify your payment manually.
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 text-center px-4">
-                        After payment, click "Place Order" below. We will verify your payment manually.
-                      </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
