@@ -169,7 +169,7 @@ export default function Auth() {
                 required
                 type="text" 
                 placeholder={t('fullName')}
-                className="w-full pl-10 pr-4 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -181,7 +181,7 @@ export default function Auth() {
               required
               type="email" 
               placeholder="Email Address"
-              className="w-full pl-10 pr-4 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -192,7 +192,7 @@ export default function Auth() {
               required
               type={showPassword ? 'text' : 'password'} 
               placeholder="Password"
-              className="w-full pl-10 pr-12 py-3 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+              className="w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />

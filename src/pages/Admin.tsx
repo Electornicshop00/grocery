@@ -266,16 +266,16 @@ export default function Admin() {
           <p className="text-gray-500">Manage your store inventory and customer orders.</p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex bg-white dark:bg-gray-900 rounded-xl p-1 border dark:border-gray-800 shadow-sm">
+          <div className="flex bg-white rounded-xl p-1 border shadow-sm">
             <button 
               onClick={() => setActiveTab('products')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'products' ? 'bg-green-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'products' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Products
             </button>
             <button 
               onClick={() => setActiveTab('orders')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'orders' ? 'bg-green-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'orders' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Orders
               {activeOrdersCount > 0 && (
@@ -342,8 +342,8 @@ export default function Admin() {
                 onClick={() => setShowLowStockOnly(!showLowStockOnly)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors border ${
                   showLowStockOnly 
-                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800' 
-                    : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    ? 'bg-orange-100 text-orange-700 border-orange-200' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 Low Stock Only
@@ -353,7 +353,7 @@ export default function Admin() {
                 <input 
                   type="text" 
                   placeholder="Search products..."
-                  className="w-full pl-9 pr-4 py-2 border dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm"
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
                 />
@@ -536,38 +536,38 @@ export default function Admin() {
             )}
           </AnimatePresence>
 
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
+                <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Product</th>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Stock</th>
-                    <th className="px-6 py-4 text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Product</th>
+                    <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Price</th>
+                    <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Stock</th>
+                    <th className="px-6 py-4 text-sm font-bold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y dark:divide-gray-800">
+                <tbody className="divide-y">
                   {filteredProducts.map(product => (
-                    <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img 
                             src={product.image || `https://picsum.photos/seed/${product.id}/100/100`} 
                             alt={product.name}
-                            className="w-10 h-10 rounded-lg object-cover border dark:border-gray-700"
+                            className="w-10 h-10 rounded-lg object-cover border"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="font-bold text-gray-800 dark:text-white">{product.name}</span>
+                          <span className="font-bold text-gray-800">{product.name}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-3 py-1 rounded-full text-xs font-bold uppercase">{product.category}</span>
+                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold uppercase">{product.category}</span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-green-700 dark:text-green-500">₹{product.price.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-bold text-green-700">₹{product.price.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className={`font-bold ${product.stock < 10 ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-white'}`}>{product.stock}</span>
+                        <span className={`font-bold ${product.stock < 10 ? 'text-red-600' : 'text-gray-800'}`}>{product.stock}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">

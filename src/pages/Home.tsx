@@ -29,15 +29,15 @@ export default function Home() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-6 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8 border dark:border-gray-800 shadow-sm">
+      <div className="relative rounded-3xl overflow-hidden bg-green-600 text-white p-6 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
         <div className="space-y-4 md:space-y-6 max-w-xl text-center md:text-left">
-          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight text-green-600">
+          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight">
             {t('shop')} <br /> {t('thankYou').split('.')[0]}
           </h1>
-          <p className="text-base md:text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-base md:text-lg text-green-100">
             {t('thankYou')}
           </p>
-          <button className="bg-green-600 text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full font-bold text-base md:text-lg hover:bg-green-700 transition-colors flex items-center gap-2 mx-auto md:mx-0 shadow-lg shadow-green-200 dark:shadow-none">
+          <button className="bg-white text-green-600 px-6 md:px-8 py-2.5 md:py-3 rounded-full font-bold text-base md:text-lg hover:bg-green-50 transition-colors flex items-center gap-2 mx-auto md:mx-0">
             <ShoppingBag className="w-5 h-5" />
             {t('startShopping')}
           </button>
@@ -46,7 +46,7 @@ export default function Home() {
           <img 
             src="https://picsum.photos/seed/grocery-hero/600/600" 
             alt="Hero" 
-            className="rounded-2xl shadow-xl rotate-3 border-4 border-white dark:border-gray-800"
+            className="rounded-2xl shadow-2xl rotate-3"
             referrerPolicy="no-referrer"
           />
         </div>
