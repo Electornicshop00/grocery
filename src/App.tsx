@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider } from './context/CartContext';
 import { ProductProvider } from './context/ProductContext';
 import { OrderProvider } from './context/OrderContext';
@@ -12,6 +13,7 @@ import Auth from './pages/Auth';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
+import FooterBar from './components/FooterBar';
 
 function ProtectedRoute({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) {
   const { user, isAdmin, loading } = useAuth();
@@ -27,13 +29,14 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
 export default function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
         <ProductProvider>
           <CartProvider>
             <OrderProvider>
               <Router>
                 <LanguageProvider>
-                  <div className="min-h-screen bg-gray-50 flex flex-col">
+                  <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col pb-16 transition-colors duration-300">
                     <Navbar />
                     <main className="flex-grow container mx-auto px-4 py-8">
                       <Routes>
@@ -59,9 +62,10 @@ export default function App() {
                         />
                       </Routes>
                     </main>
-                    <footer className="bg-white border-t py-8 text-center text-gray-500">
+                    <footer className="bg-white dark:bg-gray-900 border-t dark:border-gray-800 py-8 text-center text-gray-500 dark:text-gray-400 mb-16 transition-colors duration-300">
                       <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
                     </footer>
+                    <FooterBar />
                   </div>
                 </LanguageProvider>
               </Router>
@@ -69,6 +73,7 @@ export default function App() {
           </CartProvider>
         </ProductProvider>
       </ToastProvider>
-    </AuthProvider>
-  );
+    </ThemeProvider>
+  </AuthProvider>
+);
 }

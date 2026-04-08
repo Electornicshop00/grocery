@@ -66,6 +66,7 @@ export const translations = {
     signup: 'Sign Up',
     orders: 'Orders',
     noOrders: 'No orders yet',
+    profile: 'Profile',
   },
   bn: {
     shop: 'দোকান',
@@ -132,5 +133,6 @@ export const translations = {
     signup: 'নিবন্ধন করুন',
     orders: 'অর্ডার',
     noOrders: 'এখনও কোনো অর্ডার নেই',
+    profile: 'প্রোফাইল',
   }
 };
