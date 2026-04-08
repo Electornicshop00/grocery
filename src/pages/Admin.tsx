@@ -157,15 +157,15 @@ export default function Admin() {
   const getStatusStyles = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', icon: Clock };
+        return { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200', icon: Clock };
       case 'processing':
-        return { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', icon: Package };
+        return { bg: 'bg-gray-200', text: 'text-gray-700', border: 'border-gray-300', icon: Package };
       case 'shipped':
-        return { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200', icon: Truck };
+        return { bg: 'bg-gray-300', text: 'text-gray-800', border: 'border-gray-400', icon: Truck };
       case 'delivered':
-        return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200', icon: CheckCircle };
+        return { bg: 'bg-gray-900', text: 'text-white', border: 'border-gray-900', icon: CheckCircle };
       case 'cancelled':
-        return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', icon: XCircle };
+        return { bg: 'bg-gray-100', text: 'text-gray-400', border: 'border-gray-200', icon: XCircle };
       default:
         return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200', icon: Clock };
     }
@@ -242,10 +242,10 @@ export default function Admin() {
   };
 
   const stats = [
-    { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Total Revenue', value: `₹${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Active Products', value: products.length, icon: Package, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Low Stock Items', value: products.filter(p => p.stock < 10).length, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-gray-600', bg: 'bg-gray-50' },
+    { label: 'Total Revenue', value: `₹${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, icon: TrendingUp, color: 'text-gray-600', bg: 'bg-gray-50' },
+    { label: 'Active Products', value: products.length, icon: Package, color: 'text-gray-600', bg: 'bg-gray-50' },
+    { label: 'Low Stock Items', value: products.filter(p => p.stock < 10).length, icon: Clock, color: 'text-gray-600', bg: 'bg-gray-50' },
   ];
 
   const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
@@ -269,18 +269,18 @@ export default function Admin() {
           <div className="flex bg-white rounded-xl p-1 border shadow-sm">
             <button 
               onClick={() => setActiveTab('products')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'products' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${activeTab === 'products' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Products
             </button>
             <button 
               onClick={() => setActiveTab('orders')}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'orders' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition-colors relative flex items-center gap-2 ${activeTab === 'orders' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Orders
               {activeOrdersCount > 0 && (
                 <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold ${
-                  activeTab === 'orders' ? 'bg-white text-green-600' : 'bg-red-500 text-white'
+                  activeTab === 'orders' ? 'bg-white text-gray-900' : 'bg-gray-400 text-white'
                 }`}>
                   {activeOrdersCount}
                 </span>
@@ -310,15 +310,15 @@ export default function Admin() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center justify-between gap-4"
+          className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-orange-100 p-2 rounded-lg text-orange-600">
+            <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <p className="font-bold text-orange-800">Low Stock Alert</p>
-              <p className="text-sm text-orange-600">{lowStockProducts.length} items are running low on stock (less than 10 units remaining).</p>
+              <p className="font-bold text-gray-800">Low Stock Alert</p>
+              <p className="text-sm text-gray-600">{lowStockProducts.length} items are running low on stock (less than 10 units remaining).</p>
             </div>
           </div>
           <button 
@@ -326,7 +326,7 @@ export default function Admin() {
               setActiveTab('products');
               setShowLowStockOnly(true);
             }}
-            className="bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-orange-700 transition-colors whitespace-nowrap"
+            className="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black transition-colors whitespace-nowrap"
           >
             View Items
           </button>
@@ -342,7 +342,7 @@ export default function Admin() {
                 onClick={() => setShowLowStockOnly(!showLowStockOnly)}
                 className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors border ${
                   showLowStockOnly 
-                    ? 'bg-orange-100 text-orange-700 border-orange-200' 
+                    ? 'bg-gray-100 text-gray-700 border-gray-200' 
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
@@ -353,7 +353,7 @@ export default function Admin() {
                 <input 
                   type="text" 
                   placeholder="Search products..."
-                  className="w-full pl-9 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm"
+                  className="w-full pl-9 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-sm"
                   value={productSearchTerm}
                   onChange={(e) => setProductSearchTerm(e.target.value)}
                 />
@@ -368,7 +368,7 @@ export default function Admin() {
                     setProductForm({ name: '', price: 0, category: '', stock: 0, description: '', image: '' });
                   }
                 }}
-                className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-gray-900 text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2"
               >
                 {isAddingProduct && !editingProduct ? <ChevronUp className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                 {isAddingProduct && !editingProduct ? 'Close Form' : 'Add New Product'}
@@ -385,7 +385,7 @@ export default function Admin() {
                 className="overflow-hidden"
               >
                 <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
-                  <div className="bg-green-600 p-6 text-white flex justify-between items-center">
+                  <div className="bg-gray-900 p-6 text-white flex justify-between items-center">
                     <h3 className="text-xl font-bold">{editingProduct ? 'Edit Product' : 'Add New Product'}</h3>
                     <button onClick={() => { setIsAddingProduct(false); setEditingProduct(null); }} className="text-white/80 hover:text-white">
                       <XCircle className="w-6 h-6" />
@@ -398,7 +398,7 @@ export default function Admin() {
                         <input 
                           required
                           type="text" 
-                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
                           value={productForm.name}
                           onChange={(e) => setProductForm({...productForm, name: e.target.value})}
                         />
@@ -408,7 +408,7 @@ export default function Admin() {
                         <input 
                           required
                           type="text" 
-                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
                           value={productForm.category}
                           onChange={(e) => setProductForm({...productForm, category: e.target.value})}
                         />
@@ -419,7 +419,7 @@ export default function Admin() {
                           required
                           type="number" 
                           step="0.01"
-                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
                           value={isNaN(productForm.price) ? '' : productForm.price}
                           onChange={(e) => {
                             const val = parseFloat(e.target.value);
@@ -432,7 +432,7 @@ export default function Admin() {
                         <input 
                           required
                           type="number" 
-                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                          className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
                           value={isNaN(productForm.stock) ? '' : productForm.stock}
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
@@ -449,7 +449,7 @@ export default function Admin() {
                             <p className="text-[10px] font-bold text-gray-400 uppercase">Option 1: Upload File</p>
                             <div className="flex flex-col gap-2">
                               <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 transition-all cursor-pointer h-[100px] ${
-                                isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-green-50 hover:border-green-300 border-gray-300'
+                                isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-gray-50 hover:border-gray-300 border-gray-300'
                               }`}>
                                 <input 
                                   type="file" 
@@ -474,8 +474,10 @@ export default function Admin() {
                                     alt="Preview" 
                                     className="w-full h-full object-cover"
                                     referrerPolicy="no-referrer"
+                                    loading="lazy"
                                     onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/error/200/200';
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=200&h=200';
                                     }}
                                   />
                                   <button 
@@ -494,7 +496,7 @@ export default function Admin() {
                                 <input 
                                   type="url" 
                                   placeholder="https://example.com/image.jpg"
-                                  className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm h-[100px] align-top"
+                                  className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none text-sm h-[100px] align-top"
                                   value={productForm.image}
                                   onChange={(e) => setProductForm({...productForm, image: e.target.value})}
                                 />
@@ -509,7 +511,7 @@ export default function Admin() {
                       <label className="text-sm font-bold text-gray-700">Description</label>
                       <textarea 
                         rows={3}
-                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none"
+                        className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none resize-none"
                         value={productForm.description}
                         onChange={(e) => setProductForm({...productForm, description: e.target.value})}
                       />
@@ -525,7 +527,7 @@ export default function Admin() {
                       <button 
                         type="submit"
                         disabled={isUploading}
-                        className="flex-[2] bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-[2] bg-gray-900 text-white py-4 rounded-xl font-bold hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isUploading ? 'Uploading...' : (editingProduct ? 'Save Changes' : 'Add Product')}
                       </button>
@@ -558,6 +560,15 @@ export default function Admin() {
                             alt={product.name}
                             className="w-10 h-10 rounded-lg object-cover border"
                             referrerPolicy="no-referrer"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== `https://picsum.photos/seed/${product.id}/100/100`) {
+                                target.src = `https://picsum.photos/seed/${product.id}/100/100`;
+                              } else {
+                                target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=100&h=100';
+                              }
+                            }}
                           />
                           <span className="font-bold text-gray-800">{product.name}</span>
                         </div>
@@ -565,9 +576,9 @@ export default function Admin() {
                       <td className="px-6 py-4">
                         <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold uppercase">{product.category}</span>
                       </td>
-                      <td className="px-6 py-4 font-bold text-green-700">₹{product.price.toFixed(2)}</td>
+                      <td className="px-6 py-4 font-bold text-gray-900">₹{product.price.toFixed(2)}</td>
                       <td className="px-6 py-4">
-                        <span className={`font-bold ${product.stock < 10 ? 'text-red-600' : 'text-gray-800'}`}>{product.stock}</span>
+                        <span className={`font-bold ${product.stock < 10 ? 'text-gray-400' : 'text-gray-800'}`}>{product.stock}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -584,13 +595,13 @@ export default function Admin() {
                               });
                               setIsAddingProduct(true);
                             }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <Edit className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => handleDeleteProduct(product.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -613,7 +624,7 @@ export default function Admin() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   onClick={handleDeleteSelectedOrders}
-                  className="bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-bold border border-red-100 hover:bg-red-100 transition-colors flex items-center gap-2"
+                  className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 hover:bg-gray-200 transition-colors flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete Selected ({selectedOrders.size})
@@ -633,7 +644,7 @@ export default function Admin() {
               const isExpanded = expandedOrders.has(order.id);
               const isSelected = selectedOrders.has(order.id);
               return (
-                <div key={order.id} className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${isSelected ? 'border-green-500 ring-1 ring-green-500' : ''}`}>
+                <div key={order.id} className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${isSelected ? 'border-gray-900 ring-1 ring-gray-900' : ''}`}>
                   <div 
                     onClick={() => toggleOrderExpansion(order.id)}
                     className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
@@ -645,7 +656,7 @@ export default function Admin() {
                           toggleOrderSelection(order.id);
                         }}
                         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
-                          isSelected ? 'bg-green-600 border-green-600 text-white' : 'border-gray-300 hover:border-green-500'
+                          isSelected ? 'bg-gray-900 border-gray-900 text-white' : 'border-gray-300 hover:border-gray-900'
                         }`}
                       >
                         {isSelected && <CheckCircle className="w-4 h-4" />}
@@ -676,7 +687,7 @@ export default function Admin() {
                           value={order.status}
                           disabled={updatingOrderId === order.id}
                           onChange={(e) => handleOrderStatusChange(order.id, e.target.value as Order['status'])}
-                          className={`bg-white border rounded-lg px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-green-500 outline-none transition-colors appearance-none pr-10 ${statusStyle.text} ${statusStyle.border} ${updatingOrderId === order.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          className={`bg-white border rounded-lg px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-gray-900 outline-none transition-colors appearance-none pr-10 ${statusStyle.text} ${statusStyle.border} ${updatingOrderId === order.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                           <option value="pending">Pending</option>
                           <option value="processing">Processing</option>
@@ -694,7 +705,7 @@ export default function Admin() {
                       </div>
                       <div className="text-right min-w-[100px]">
                         <p className="text-sm text-gray-500">{format(new Date(order.createdAt), 'MMM d, yyyy')}</p>
-                        <p className="text-xl font-bold text-green-700">₹{order.total.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-gray-900">₹{order.total.toFixed(2)}</p>
                       </div>
                       <div className={`p-2 rounded-full bg-gray-100 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                         <ChevronDown className="w-5 h-5" />
@@ -726,7 +737,7 @@ export default function Admin() {
                               ))}
                               <div className="border-t pt-3 mt-3 flex justify-between items-center font-bold text-gray-800">
                                 <span>Total Amount</span>
-                                <span className="text-green-700 text-lg">₹{order.total.toFixed(2)}</span>
+                                <span className="text-gray-900 text-lg">₹{order.total.toFixed(2)}</span>
                               </div>
                             </div>
                           </div>
@@ -738,7 +749,7 @@ export default function Admin() {
                               </h4>
                               <div className="bg-white p-4 rounded-xl border space-y-4">
                                 <div className="flex items-start gap-3 text-sm">
-                                  <Truck className="w-5 h-5 text-green-600 shrink-0" />
+                                  <Truck className="w-5 h-5 text-gray-600 shrink-0" />
                                   <div>
                                     <p className="font-bold text-gray-800">Shipping Address</p>
                                     <p className="text-gray-600 leading-relaxed">{order.customerAddress}</p>
@@ -746,7 +757,7 @@ export default function Admin() {
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
                                   <div className="w-5 h-5 flex items-center justify-center">
-                                    <Phone className="w-4 h-4 text-green-600 shrink-0" />
+                                    <Phone className="w-4 h-4 text-gray-600 shrink-0" />
                                   </div>
                                   <div>
                                     <p className="font-bold text-gray-800">Contact Number</p>
@@ -755,7 +766,7 @@ export default function Admin() {
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
                                   <div className="w-5 h-5 flex items-center justify-center">
-                                    <CreditCard className="w-4 h-4 text-green-600 shrink-0" />
+                                    <CreditCard className="w-4 h-4 text-gray-600 shrink-0" />
                                   </div>
                                   <div>
                                     <p className="font-bold text-gray-800">Payment Method</p>
@@ -768,7 +779,7 @@ export default function Admin() {
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
                                   <div className="w-5 h-5 flex items-center justify-center">
-                                    <Clock className="w-4 h-4 text-green-600 shrink-0" />
+                                    <Clock className="w-4 h-4 text-gray-600 shrink-0" />
                                   </div>
                                   <div>
                                     <p className="font-bold text-gray-800">Order Date</p>

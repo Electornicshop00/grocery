@@ -53,6 +53,15 @@ export default function ProductCard({ product }: ProductCardProps) {
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           referrerPolicy="no-referrer"
+          loading="lazy"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== `https://picsum.photos/seed/${product.id}/400/400`) {
+              target.src = `https://picsum.photos/seed/${product.id}/400/400`;
+            } else {
+              target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=400&h=400';
+            }
+          }}
         />
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -63,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="p-3 md:p-4">
         <div className="flex justify-between items-start mb-1">
-          <span className="text-[10px] md:text-xs font-semibold text-green-600 uppercase tracking-wider">{product.category}</span>
+          <span className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wider">{product.category}</span>
           <span className="text-[10px] md:text-xs text-gray-500">Stock: {product.stock}</span>
         </div>
         <h3 className="font-bold text-gray-800 text-sm md:text-lg mb-1 md:mb-2 truncate">{product.name}</h3>
@@ -71,20 +80,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         
         <div className="flex flex-col gap-2 mt-auto">
           <div className="flex items-center justify-between gap-1">
-            <span className="text-base md:text-xl font-bold text-green-700">₹{product.price.toFixed(2)}</span>
+            <span className="text-base md:text-xl font-bold text-gray-900">₹{product.price.toFixed(2)}</span>
             
             {cartItem ? (
-              <div className="flex items-center gap-1 bg-green-50 rounded-lg p-0.5 md:p-1 border border-green-200">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 md:p-1 border border-gray-200">
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="p-0.5 md:p-1 hover:bg-green-100 rounded text-green-700"
+                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded text-gray-700"
                 >
                   <Minus className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
-                <span className="w-4 md:w-6 text-center text-xs md:text-base font-bold text-green-800">{cartItem.quantity}</span>
+                <span className="w-4 md:w-6 text-center text-xs md:text-base font-bold text-gray-900">{cartItem.quantity}</span>
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="p-0.5 md:p-1 hover:bg-green-100 rounded text-green-700"
+                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded text-gray-700"
                   disabled={cartItem.quantity >= product.stock}
                 >
                   <Plus className="w-3 h-3 md:w-4 md:h-4" />
@@ -97,7 +106,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 className={cn(
                   "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-base",
                   product.stock > 0 
-                    ? "bg-green-600 text-white hover:bg-green-700" 
+                    ? "bg-gray-900 text-white hover:bg-black" 
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 )}
               >
@@ -114,7 +123,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             className={cn(
               "w-full flex items-center justify-center gap-1 md:gap-2 py-1.5 md:py-2 rounded-lg font-bold transition-all text-xs md:text-base",
               product.stock > 0 
-                ? "bg-amber-500 text-white hover:bg-amber-600 shadow-sm" 
+                ? "bg-gray-800 text-white hover:bg-gray-900 shadow-sm" 
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             )}
           >

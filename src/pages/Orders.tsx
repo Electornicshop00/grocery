@@ -31,15 +31,15 @@ export default function Orders() {
   const getStatusStyles = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return { bg: 'bg-amber-100', text: 'text-amber-700', border: 'border-amber-200', icon: Clock };
+        return { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200', icon: Clock };
       case 'processing':
-        return { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200', icon: Package };
+        return { bg: 'bg-gray-200', text: 'text-gray-700', border: 'border-gray-300', icon: Package };
       case 'shipped':
-        return { bg: 'bg-indigo-100', text: 'text-indigo-700', border: 'border-indigo-200', icon: Truck };
+        return { bg: 'bg-gray-300', text: 'text-gray-800', border: 'border-gray-400', icon: Truck };
       case 'delivered':
-        return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200', icon: CheckCircle };
+        return { bg: 'bg-gray-900', text: 'text-white', border: 'border-gray-900', icon: CheckCircle };
       case 'cancelled':
-        return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', icon: XCircle };
+        return { bg: 'bg-gray-100', text: 'text-gray-400', border: 'border-gray-200', icon: XCircle };
       default:
         return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200', icon: Clock };
     }
@@ -75,7 +75,7 @@ export default function Orders() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function Orders() {
         </div>
         <h2 className="text-3xl font-bold text-gray-800">{t('noOrders')}</h2>
         <p className="text-gray-500 max-w-md mx-auto">You haven't placed any orders yet. Start shopping to fill your pantry!</p>
-        <Link to="/" className="inline-block bg-green-600 text-white px-8 py-3 rounded-full font-bold hover:bg-green-700 transition-colors">
+        <Link to="/" className="inline-block bg-gray-900 text-white px-8 py-3 rounded-full font-bold hover:bg-black transition-colors">
           {t('startShopping')}
         </Link>
       </div>
@@ -102,7 +102,7 @@ export default function Orders() {
           <h1 className="text-3xl font-bold text-gray-800">{t('orders')}</h1>
           <p className="text-gray-500">Track and manage your grocery orders.</p>
         </div>
-        <div className="bg-green-50 text-green-700 px-4 py-2 rounded-xl font-bold text-sm border border-green-100">
+        <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl font-bold text-sm border border-gray-200">
           {userOrders.length} {userOrders.length === 1 ? 'Order' : 'Orders'}
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function Orders() {
                 <div className="flex items-center gap-6">
                   <div className="text-right">
                     <p className="text-sm text-gray-500">{t('total')}</p>
-                    <p className="text-xl font-bold text-green-700">₹{order.total.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-gray-900">₹{order.total.toFixed(2)}</p>
                   </div>
                   <div className={`p-2 rounded-full bg-gray-100 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                     <ChevronDown className="w-5 h-5" />
@@ -168,7 +168,7 @@ export default function Orders() {
                           ))}
                           <div className="border-t pt-3 mt-3 flex justify-between items-center font-bold text-gray-800">
                             <span>{t('total')}</span>
-                            <span className="text-green-700 text-lg">₹{order.total.toFixed(2)}</span>
+                            <span className="text-gray-900 text-lg">₹{order.total.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -181,21 +181,21 @@ export default function Orders() {
                           </h4>
                           <div className="bg-white p-4 rounded-xl border space-y-4">
                             <div className="flex items-start gap-3 text-sm">
-                              <MapPin className="w-5 h-5 text-green-600 shrink-0" />
+                              <MapPin className="w-5 h-5 text-gray-600 shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-800">Shipping Address</p>
                                 <p className="text-gray-600 leading-relaxed">{order.customerAddress}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <Phone className="w-5 h-5 text-green-600 shrink-0" />
+                              <Phone className="w-5 h-5 text-gray-600 shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-800">Contact Number</p>
                                 <p className="text-gray-600">{order.customerPhone}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <CreditCard className="w-5 h-5 text-green-600 shrink-0" />
+                              <CreditCard className="w-5 h-5 text-gray-600 shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-800">{t('paymentMethod')}</p>
                                 <p className="text-gray-600 font-medium">
@@ -206,7 +206,7 @@ export default function Orders() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <Calendar className="w-5 h-5 text-green-600 shrink-0" />
+                              <Calendar className="w-5 h-5 text-gray-600 shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-800">Order Placed</p>
                                 <p className="text-gray-600">{format(new Date(order.createdAt), 'MMMM d, yyyy HH:mm')}</p>
@@ -239,17 +239,17 @@ export default function Orders() {
                           </div>
                         )}
                         
-                        <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex items-center justify-between">
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                            <div className="p-2 bg-gray-100 rounded-lg text-gray-600">
                               <CheckCircle className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-green-800">Need help?</p>
-                              <p className="text-xs text-green-600">Contact support for this order</p>
+                              <p className="text-sm font-bold text-gray-800">Need help?</p>
+                              <p className="text-xs text-gray-600">Contact support for this order</p>
                             </div>
                           </div>
-                          <ArrowRight className="w-5 h-5 text-green-600" />
+                          <ArrowRight className="w-5 h-5 text-gray-600" />
                         </div>
                       </div>
                     </div>

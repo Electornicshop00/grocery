@@ -33,6 +33,11 @@ export default function Navbar() {
             alt="Logo" 
             className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
             referrerPolicy="no-referrer"
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=100&h=100";
+            }}
           />
         </Link>
 

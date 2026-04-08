@@ -43,7 +43,7 @@ export default function Profile() {
   if (loading && !profile) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-900" />
       </div>
     );
   }
@@ -55,14 +55,14 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
       >
-        <div className="bg-green-600 p-8 text-white">
+        <div className="bg-gray-900 p-8 text-white">
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm">
               <User className="w-12 h-12" />
             </div>
             <div>
               <h1 className="text-3xl font-bold">{profile?.displayName || 'User Profile'}</h1>
-              <p className="text-green-100">{profile?.email}</p>
+              <p className="text-gray-300">{profile?.email}</p>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function Profile() {
                 <input 
                   type="text"
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-gray-900 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   placeholder="Enter your full name"
@@ -91,7 +91,7 @@ export default function Profile() {
                 <input 
                   type="tel"
                   disabled={!isEditing}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-gray-900 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="Enter your phone number"
@@ -105,7 +105,7 @@ export default function Profile() {
                 <textarea 
                   disabled={!isEditing}
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-gray-900 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all resize-none"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Enter your delivery address"
@@ -119,7 +119,7 @@ export default function Profile() {
                   <button 
                     type="submit"
                     disabled={isSaving}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-colors flex items-center justify-center gap-2"
                   >
                     {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                     Save Changes
@@ -136,7 +136,7 @@ export default function Profile() {
                 <button 
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors"
+                  className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-colors"
                 >
                   Edit Profile
                 </button>

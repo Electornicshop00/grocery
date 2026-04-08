@@ -113,8 +113,8 @@ export default function Auth() {
     return (
       <div className="max-w-md mx-auto mt-12 px-4">
         <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 text-center bg-white dark:bg-gray-900 transition-colors duration-300">
-          <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+          <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-gray-900 dark:text-gray-100" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">{t('verifyEmail')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
@@ -127,7 +127,7 @@ export default function Auth() {
                 setShowVerification(false);
                 setIsLogin(true);
               }}
-              className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors"
+              className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-black transition-colors"
             >
               {t('login')}
             </button>
@@ -148,8 +148,8 @@ export default function Auth() {
     <div className="max-w-md mx-auto mt-8 md:mt-12 px-4">
       <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-300">
         <div className="text-center mb-8">
-          <div className="bg-green-100 dark:bg-green-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {isLogin ? <LogIn className="w-8 h-8 text-green-600 dark:text-green-400" /> : <UserPlus className="w-8 h-8 text-green-600 dark:text-green-400" />}
+          <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            {isLogin ? <LogIn className="w-8 h-8 text-gray-900 dark:text-gray-100" /> : <UserPlus className="w-8 h-8 text-gray-900 dark:text-gray-100" />}
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{isLogin ? t('login') : t('signup')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
@@ -169,7 +169,7 @@ export default function Auth() {
                 required
                 type="text" 
                 placeholder={t('fullName')}
-                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
@@ -181,7 +181,7 @@ export default function Auth() {
               required
               type="email" 
               placeholder="Email Address"
-              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -192,7 +192,7 @@ export default function Auth() {
               required
               type={showPassword ? 'text' : 'password'} 
               placeholder="Password"
-              className="w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+              className="w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -208,7 +208,7 @@ export default function Auth() {
           <button 
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-black transition-colors disabled:opacity-50"
           >
             {loading ? 'Processing...' : isLogin ? t('login') : t('signup')}
           </button>
@@ -218,7 +218,7 @@ export default function Auth() {
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="ml-2 text-green-600 dark:text-green-400 font-bold hover:underline"
+            className="ml-2 text-gray-900 dark:text-gray-100 font-bold hover:underline"
           >
             {isLogin ? t('signup') : t('login')}
           </button>
