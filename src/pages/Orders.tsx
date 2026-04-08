@@ -198,7 +198,11 @@ export default function Orders() {
                               <CreditCard className="w-5 h-5 text-green-600 shrink-0" />
                               <div>
                                 <p className="font-bold text-gray-800">{t('paymentMethod')}</p>
-                                <p className="text-gray-600 uppercase">{order.paymentMethod}</p>
+                                <p className="text-gray-600 font-medium">
+                                  {order.paymentMethod === 'cod' ? t('cod') : 
+                                   order.paymentMethod === 'whatsapp' ? t('whatsapp') : 
+                                   t('upi')}
+                                </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">

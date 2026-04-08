@@ -50,7 +50,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (
-          (request.auth.token.email == "himangsusing37@gmail.com") ||
+          request.auth.token.get('email', '').lower() == "himangsusing37@gmail.com" ||
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
         );
     }
@@ -68,17 +68,17 @@ service cloud.firestore {
     }
 
     function isValidOrder(data) {
-      return data.keys().hasAll(['userId', 'items', 'total', 'status', 'createdAt', 'customerName', 'customerPhone', 'customerAddress', 'paymentMethod']) &&
+      return data.keys().hasAll(['userId', 'items', 'total', 'status', 'createdAt']) &&
              data.userId is string &&
              data.items is list &&
              data.total is number && data.total >= 0 &&
              data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] &&
              isValidDate(data.createdAt) &&
-             data.customerName is string &&
-             data.customerPhone is string &&
-             data.customerAddress is string &&
-             data.paymentMethod in ['cod', 'whatsapp'] &&
-             (data.get('trackingNumber', '') is string);
+             (!('customerName' in data) || (data.customerName is string && data.customerName.size() > 0)) &&
+             (!('customerPhone' in data) || data.customerPhone is string) &&
+             (!('customerAddress' in data) || data.customerAddress is string) &&
+             (!('paymentMethod' in data) || data.paymentMethod in ['cod', 'whatsapp', 'upi']) &&
+             (!('trackingNumber' in data) || data.trackingNumber is string);
     }
 
     function isValidUser(data) {
@@ -116,8 +116,13 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && isValidOrder(request.resource.data) && 
                     request.resource.data.userId == request.auth.uid;
-      allow update: if isAuthenticated() && isValidOrder(request.resource.data) && 
-                    (isAdmin() || (isOwner(resource.data.userId) && request.resource.data.status == resource.data.status)) &&
+      allow update: if isAuthenticated() && 
+                    (
+                      (isAdmin() && request.resource.data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']) || 
+                      (isOwner(resource.data.userId) && 
+                       isValidOrder(request.resource.data) && 
+                       request.resource.data.status == resource.data.status)
+                    ) &&
                     request.resource.data.userId == resource.data.userId;
     }
   }

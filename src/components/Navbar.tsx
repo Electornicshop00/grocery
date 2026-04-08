@@ -73,10 +73,12 @@ export default function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-4">
-              <Link to="/orders" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
-                <ClipboardList className="w-5 h-5" />
-                <span className="hidden md:inline">{t('myOrders')}</span>
-              </Link>
+              {!isAdmin && (
+                <Link to="/orders" className="text-gray-600 hover:text-green-600 flex items-center gap-1">
+                  <ClipboardList className="w-5 h-5" />
+                  <span className="hidden md:inline">{t('myOrders')}</span>
+                </Link>
+              )}
               {isAdmin && (
                 <>
                   <Link to="/admin" className="text-gray-600 hover:text-green-600 flex items-center gap-1">

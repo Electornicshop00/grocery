@@ -23,7 +23,7 @@ export interface Order {
   customerPhone: string;
   customerAddress: string;
   trackingNumber?: string;
-  paymentMethod: 'cod' | 'whatsapp';
+  paymentMethod: 'cod' | 'whatsapp' | 'upi';
 }
 
 export interface UserProfile {

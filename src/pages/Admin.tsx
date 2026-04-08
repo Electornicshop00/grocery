@@ -39,6 +39,7 @@ export default function Admin() {
   const { orders, updateOrderStatus, updateTrackingNumber, loading: ordersLoading } = useOrders();
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -120,12 +121,15 @@ export default function Admin() {
   };
 
   const handleOrderStatusChange = async (id: string, status: Order['status']) => {
+    setUpdatingOrderId(id);
     try {
       await updateOrderStatus(id, status);
       showToast(`Order status updated to ${status}`, 'success');
     } catch (error) {
       console.error("Error updating order status:", error);
       showToast('Failed to update order status', 'error');
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
@@ -359,61 +363,63 @@ export default function Admin() {
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-gray-700">Product Image</label>
                       <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                          {productForm.image && (
-                            <div className="relative w-20 h-20 rounded-xl overflow-hidden border shrink-0">
-                              <img 
-                                src={productForm.image} 
-                                alt="Preview" 
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                              <button 
-                                type="button"
-                                onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">Option 1: Upload File</p>
+                            <div className="flex flex-col gap-2">
+                              <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-4 transition-all cursor-pointer h-[100px] ${
+                                isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-green-50 hover:border-green-300 border-gray-300'
+                              }`}>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*"
+                                  onChange={handleImageUpload}
+                                  disabled={isUploading}
+                                />
+                                <Upload className="w-5 h-5 text-gray-400 mb-1" />
+                                <span className="text-[10px] font-bold text-gray-500 uppercase">Firebase Upload</span>
+                              </label>
                             </div>
-                          )}
-                          <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-4 transition-all cursor-pointer ${
-                            isUploading ? 'bg-gray-50 border-gray-200' : 'hover:bg-green-50 hover:border-green-300 border-gray-300'
-                          }`}>
-                            <input 
-                              type="file" 
-                              className="hidden" 
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              disabled={isUploading}
-                            />
-                            {isUploading ? (
-                              <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="w-6 h-6 text-green-600 animate-spin" />
-                                <span className="text-xs font-bold text-gray-500 uppercase">Uploading...</span>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center gap-2">
-                                <Upload className="w-6 h-6 text-gray-400" />
-                                <span className="text-xs font-bold text-gray-500 uppercase">
-                                  {productForm.image ? 'Change Image' : 'Upload Image'}
-                                </span>
-                              </div>
-                            )}
-                          </label>
-                        </div>
-                        
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-400 text-xs font-bold">URL</span>
                           </div>
-                          <input 
-                            type="url" 
-                            placeholder="Or paste image URL here..."
-                            className="w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm"
-                            value={productForm.image}
-                            onChange={(e) => setProductForm({...productForm, image: e.target.value})}
-                          />
+
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">Option 2: Paste URL</p>
+                            <div className="flex gap-3">
+                              {productForm.image && (
+                                <div className="relative w-[100px] h-[100px] rounded-xl overflow-hidden border bg-white shrink-0 group">
+                                  <img 
+                                    src={productForm.image} 
+                                    alt="Preview" 
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://picsum.photos/seed/error/200/200';
+                                    }}
+                                  />
+                                  <button 
+                                    type="button"
+                                    onClick={() => setProductForm(prev => ({ ...prev, image: '' }))}
+                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                                  >
+                                    <Trash2 className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              )}
+                              <div className="relative flex-1">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <Search className="w-4 h-4 text-gray-400" />
+                                </div>
+                                <input 
+                                  type="url" 
+                                  placeholder="https://example.com/image.jpg"
+                                  className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-sm h-[100px] align-top"
+                                  value={productForm.image}
+                                  onChange={(e) => setProductForm({...productForm, image: e.target.value})}
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <p className="text-[10px] text-gray-400 italic">Recommended: Square image, max 5MB. Or use a direct image link.</p>
@@ -544,17 +550,27 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                      <select 
-                        value={order.status}
-                        onChange={(e) => handleOrderStatusChange(order.id, e.target.value as Order['status'])}
-                        className={`bg-white border rounded-lg px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-green-500 outline-none transition-colors ${statusStyle.text} ${statusStyle.border}`}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <div className="relative">
+                        <select 
+                          value={order.status}
+                          disabled={updatingOrderId === order.id}
+                          onChange={(e) => handleOrderStatusChange(order.id, e.target.value as Order['status'])}
+                          className={`bg-white border rounded-lg px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-green-500 outline-none transition-colors appearance-none pr-10 ${statusStyle.text} ${statusStyle.border} ${updatingOrderId === order.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          {updatingOrderId === order.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                          ) : (
+                            <ChevronDown className={`w-4 h-4 ${statusStyle.text}`} />
+                          )}
+                        </div>
+                      </div>
                       <div className="text-right min-w-[100px]">
                         <p className="text-sm text-gray-500">{format(new Date(order.createdAt), 'MMM d, yyyy')}</p>
                         <p className="text-xl font-bold text-green-700">₹{order.total.toFixed(2)}</p>
@@ -622,7 +638,11 @@ export default function Admin() {
                                   </div>
                                   <div>
                                     <p className="font-bold text-gray-800">Payment Method</p>
-                                    <p className="text-gray-600 uppercase">{order.paymentMethod}</p>
+                                    <p className="text-gray-600 font-medium">
+                                      {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 
+                                       order.paymentMethod === 'whatsapp' ? 'WhatsApp Order' : 
+                                       'Online UPI'}
+                                    </p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">

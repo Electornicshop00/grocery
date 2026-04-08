@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trash2, Plus, Minus, Send, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Minus, Send, ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, AlertCircle, ShieldAlert, Loader2, CreditCard } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
@@ -21,7 +21,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<CheckoutStep>(location.state?.startStep || 'cart');
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'whatsapp'>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'whatsapp' | 'upi'>('cod');
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
@@ -260,6 +260,45 @@ export default function Cart() {
                   <h3 className="font-bold text-lg text-gray-800">{t('cod')}</h3>
                   <p className="text-sm text-gray-500">{t('payAtDelivery')}</p>
                 </button>
+
+                <button 
+                  onClick={() => setPaymentMethod('upi')}
+                  className={`p-6 rounded-3xl border-2 text-left transition-all ${
+                    paymentMethod === 'upi' ? 'border-green-600 bg-green-50 shadow-md' : 'border-gray-100 hover:border-green-200'
+                  }`}
+                >
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+                    paymentMethod === 'upi' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <CreditCard className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-lg text-gray-800">{t('upi')}</h3>
+                  <p className="text-sm text-gray-500">{t('payOnline')}</p>
+                </button>
+
+                <AnimatePresence>
+                  {paymentMethod === 'upi' && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-white p-6 rounded-3xl border-2 border-green-100 flex flex-col items-center gap-4"
+                    >
+                      <p className="text-sm font-bold text-green-800 uppercase tracking-wider">{t('scanToPay')}</p>
+                      <div className="bg-white p-4 rounded-2xl border shadow-sm">
+                        <img 
+                          src="https://roasted-lavender-h2bzsr9y86.edgeone.app/IMG_20260406_134936.png" 
+                          alt="UPI QR Code"
+                          className="w-48 h-48 object-contain"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 text-center px-4">
+                        After payment, click "Place Order" below. We will verify your payment manually.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           )}
