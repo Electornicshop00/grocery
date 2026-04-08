@@ -112,13 +112,13 @@ export default function Auth() {
   if (showVerification) {
     return (
       <div className="max-w-md mx-auto mt-12 px-4">
-        <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 text-center bg-white dark:bg-gray-900 transition-colors duration-300">
-          <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-8 h-8 text-gray-900 dark:text-gray-100" />
+        <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 text-center bg-white transition-colors duration-300">
+          <div className="bg-gray-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-8 h-8 text-gray-900" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-4">{t('verifyEmail')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            We have sent you a verification email to <span className="font-bold text-gray-800 dark:text-white">{email}</span>. 
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">{t('verifyEmail')}</h1>
+          <p className="text-gray-600 mb-8">
+            We have sent you a verification email to <span className="font-bold text-gray-800">{email}</span>. 
             Please verify it and log in.
           </p>
           <div className="space-y-4">
@@ -146,13 +146,13 @@ export default function Auth() {
 
   return (
     <div className="max-w-md mx-auto mt-8 md:mt-12 px-4">
-      <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <div className="p-6 md:p-8 rounded-3xl shadow-xl border border-gray-200 bg-white transition-colors duration-300">
         <div className="text-center mb-8">
-          <div className="bg-gray-100 dark:bg-gray-800 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {isLogin ? <LogIn className="w-8 h-8 text-gray-900 dark:text-gray-100" /> : <UserPlus className="w-8 h-8 text-gray-900 dark:text-gray-100" />}
+          <div className="bg-gray-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            {isLogin ? <LogIn className="w-8 h-8 text-gray-900" /> : <UserPlus className="w-8 h-8 text-gray-900" />}
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">{isLogin ? t('login') : t('signup')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{isLogin ? t('login') : t('signup')}</h1>
+          <p className="text-gray-500 mt-2">{isLogin ? 'Login to your FreshCart account' : 'Join FreshCart for fresh groceries'}</p>
         </div>
 
         {error && (
@@ -214,11 +214,11 @@ export default function Auth() {
           </button>
         </form>
 
-        <p className="text-center mt-8 text-gray-500 dark:text-gray-400">
+        <p className="text-center mt-8 text-gray-500">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <button 
             onClick={() => setIsLogin(!isLogin)}
-            className="ml-2 text-gray-900 dark:text-gray-100 font-bold hover:underline"
+            className="ml-2 text-gray-900 font-bold hover:underline"
           >
             {isLogin ? t('signup') : t('login')}
           </button>

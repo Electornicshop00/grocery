@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Force white background project-wide */
+html, body, #root {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+.dark html, .dark body, .dark #root {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
 @theme {
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
@@ -8,11 +19,7 @@
 
 @layer base {
   body {
-    @apply font-sans text-gray-900 antialiased min-h-screen transition-colors duration-300 bg-white;
-  }
-
-  .dark body {
-    @apply bg-gray-950 text-gray-100;
+    @apply font-sans antialiased min-h-screen transition-colors duration-300;
   }
   
   h1, h2, h3, h4, h5, h6 {

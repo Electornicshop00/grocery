@@ -293,13 +293,13 @@ export default function Admin() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-gray-900 p-4 md:p-6 rounded-2xl shadow-sm border dark:border-gray-800 flex items-center gap-3 md:gap-4 transition-colors">
+          <div key={i} className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border flex items-center gap-3 md:gap-4 transition-colors">
             <div className={`${stat.bg} ${stat.color} p-2 md:p-4 rounded-xl shrink-0`}>
               <stat.icon className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] md:text-sm text-gray-500 font-medium truncate">{stat.label}</p>
-              <p className="text-base md:text-2xl font-bold text-gray-800 dark:text-white truncate">{stat.value}</p>
+              <p className="text-base md:text-2xl font-bold text-gray-800 truncate">{stat.value}</p>
             </div>
           </div>
         ))}

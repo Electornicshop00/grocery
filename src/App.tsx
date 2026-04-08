@@ -36,7 +36,10 @@ export default function App() {
             <OrderProvider>
               <Router>
                 <LanguageProvider>
-                  <div className="min-h-screen bg-white dark:bg-gray-950 flex flex-col pb-16 transition-colors duration-300">
+                  <div 
+                    className="min-h-screen flex flex-col pb-16 transition-colors duration-300"
+                    style={{ backgroundColor: 'rgb(255, 255, 255)' }}
+                  >
                     <Navbar />
                     <main className="flex-grow container mx-auto px-4 py-8">
                       <Routes>
@@ -62,7 +65,10 @@ export default function App() {
                         />
                       </Routes>
                     </main>
-                    <footer className="bg-white dark:bg-gray-900 border-t dark:border-gray-800 py-8 text-center text-gray-500 dark:text-gray-400 mb-16 transition-colors duration-300">
+                    <footer 
+                      className="border-t py-8 text-center text-gray-500 transition-colors duration-300"
+                      style={{ backgroundColor: 'rgb(255, 255, 255)' }}
+                    >
                       <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
                     </footer>
                     <FooterBar />
