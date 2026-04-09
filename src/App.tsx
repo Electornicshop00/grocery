@@ -7,6 +7,7 @@ import { OrderProvider } from './context/OrderContext';
 import { ToastProvider } from './context/ToastContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 import Cart from './pages/Cart';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
@@ -36,50 +37,65 @@ export default function App() {
             <OrderProvider>
               <Router>
                 <LanguageProvider>
-                  <div 
-                    className="min-h-screen flex flex-col pb-16 transition-colors duration-300"
-                    style={{ backgroundColor: 'rgb(255, 255, 255)' }}
-                  >
-                    <Navbar />
-                    <main className="flex-grow container mx-auto px-4 py-8">
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                        <Route 
-                          path="/orders" 
-                          element={
-                            <ProtectedRoute>
-                              <Orders />
-                            </ProtectedRoute>
-                          } 
-                        />
-                        <Route 
-                          path="/admin/*" 
-                          element={
-                            <ProtectedRoute adminOnly>
-                              <Admin />
-                            </ProtectedRoute>
-                          } 
-                        />
-                      </Routes>
-                    </main>
-                    <footer 
-                      className="border-t py-8 text-center text-white transition-colors duration-300"
-                      style={{ backgroundColor: 'rgb(39, 96, 27)' }}
-                    >
-                      <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
-                    </footer>
-                    <FooterBar />
-                  </div>
+                  <AppContent />
                 </LanguageProvider>
               </Router>
             </OrderProvider>
           </CartProvider>
         </ProductProvider>
-      </ToastProvider>
-    </ThemeProvider>
-  </AuthProvider>
-);
+        </ToastProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  );
 }
+
+function AppContent() {
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/';
+
+  return (
+    <div 
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${!isLandingPage ? 'pb-16' : ''}`}
+      style={{ backgroundColor: 'rgb(255, 255, 255)' }}
+    >
+      {!isLandingPage && <Navbar />}
+      <main className={`flex-grow ${!isLandingPage ? 'container mx-auto px-4 py-8' : ''}`}>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/shop" element={<Home />} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/*" 
+            element={
+              <ProtectedRoute adminOnly>
+                <Admin />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </main>
+      {!isLandingPage && (
+        <>
+          <footer 
+            className="border-t py-8 text-center text-white transition-colors duration-300"
+            style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+          >
+            <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
+          </footer>
+          <FooterBar />
+        </>
+      )}
+    </div>
+  );
+}
+

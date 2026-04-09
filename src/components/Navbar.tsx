@@ -27,7 +27,7 @@ export default function Navbar() {
   return (
     <nav className="border-b sticky top-0 z-40 shadow-sm transition-colors duration-300" style={{ backgroundColor: 'rgb(39, 96, 27)' }}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/shop" className="flex items-center gap-2">
           <img 
             src="https://picsum.photos/seed/user-logo/100/100" 
             alt="Logo" 
