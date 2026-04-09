@@ -19,7 +19,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await signOut(auth);
     showToast(t('logout'), 'info');
-    navigate('/auth');
+    navigate('/');
   };
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
