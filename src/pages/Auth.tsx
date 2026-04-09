@@ -69,7 +69,8 @@ export default function Auth() {
             return;
           }
           showToast(t('login'), 'success');
-          navigate('/');
+          const from = location.state?.from || '/shop';
+          navigate(from, { replace: true });
         } catch (err: any) {
           if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
             const msg = "Email or password is incorrect";

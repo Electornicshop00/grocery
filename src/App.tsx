@@ -22,7 +22,7 @@ function ProtectedRoute({ children, adminOnly = false }: { children: React.React
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!user) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
-  if (adminOnly && !isAdmin) return <Navigate to="/" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/shop" replace />;
 
   return <>{children}</>;
 }
