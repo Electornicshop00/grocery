@@ -135,6 +135,24 @@ export default function Orders() {
                     <p className="text-lg font-bold text-gray-800">{format(new Date(order.createdAt), 'MMMM d, yyyy')}</p>
                   </div>
                 </div>
+
+                <div className="hidden md:flex items-center -space-x-3 overflow-hidden">
+                  {order.items.slice(0, 4).map((item, idx) => (
+                    <div key={idx} className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
+                  {order.items.length > 4 && (
+                    <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600 shadow-sm">
+                      +{order.items.length - 4}
+                    </div>
+                  )}
+                </div>
                 
                 <div className="flex items-center gap-6">
                   <div className="text-right">
@@ -164,12 +182,25 @@ export default function Orders() {
                         </h4>
                         <div className="space-y-3 bg-white p-4 rounded-xl border">
                           {order.items.map((item, i) => (
-                            <div key={i} className="flex justify-between items-center text-sm">
-                              <span className="text-gray-700 font-medium">{item.name} <span className="text-gray-400 font-normal">x{item.quantity}</span></span>
-                              <span className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(2)}</span>
+                            <div key={i} className="flex items-center gap-3 py-1 border-b last:border-0 pb-3 last:pb-0">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border shrink-0">
+                                <img 
+                                  src={item.image} 
+                                  alt={item.name} 
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-bold text-gray-800 truncate">{item.name}</p>
+                                <p className="text-xs text-gray-500">₹{item.price.toFixed(2)} x {item.quantity}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                              </div>
                             </div>
                           ))}
-                          <div className="border-t pt-3 mt-3 flex justify-between items-center font-bold text-gray-800">
+                          <div className="pt-3 flex justify-between items-center font-bold text-gray-800">
                             <span>{t('total')}</span>
                             <span className="text-gray-900 text-lg">₹{order.total.toFixed(2)}</span>
                           </div>

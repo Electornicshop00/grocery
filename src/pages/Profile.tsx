@@ -1,24 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { User, Mail, Phone, MapPin, Save, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Profile() {
   const { profile, updateUserProfile, loading } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    displayName: '',
+    firstName: '',
+    lastName: '',
     phone: '',
     address: ''
   });
 
   useEffect(() => {
     if (profile) {
+      const nameParts = (profile.displayName || '').split(' ');
       setFormData({
-        displayName: profile.displayName || '',
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
         phone: profile.phone || '',
         address: profile.address || ''
       });
@@ -27,9 +32,50 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const nameRegex = /^[a-zA-Z]{2,30}$/;
+    const phoneRegex = /^(\+91)?[6789]\d{9}$/;
+
+    if (!formData.firstName.trim()) {
+      showToast('Please enter your first name', 'error');
+      return;
+    }
+    if (!nameRegex.test(formData.firstName.trim())) {
+      showToast('First name should be letters only (2-30 chars)', 'error');
+      return;
+    }
+    if (!formData.lastName.trim()) {
+      showToast('Please enter your last name', 'error');
+      return;
+    }
+    if (!nameRegex.test(formData.lastName.trim())) {
+      showToast('Last name should be letters only (2-30 chars)', 'error');
+      return;
+    }
+    
+    const cleanPhone = formData.phone.trim().replace(/[\s\-]/g, '');
+    if (!cleanPhone) {
+      showToast('Please enter your phone number', 'error');
+      return;
+    }
+    if (!phoneRegex.test(cleanPhone)) {
+      showToast('Please enter a valid Indian phone number (e.g., +919876543210 or 9876543210)', 'error');
+      return;
+    }
+
+    if (!formData.address.trim()) {
+      showToast('Please enter your address', 'error');
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await updateUserProfile(formData);
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
+      await updateUserProfile({
+        displayName: fullName,
+        phone: formData.phone,
+        address: formData.address
+      });
       showToast('Profile updated successfully', 'success');
       setIsEditing(false);
     } catch (error) {
@@ -72,21 +118,37 @@ export default function Profile() {
 
         <div className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <User className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> Full Name
+                  <User className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> {t('firstName')}
                 </label>
                 <input 
                   type="text"
                   disabled={!isEditing}
                   className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-gray-900 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
-                  value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  placeholder="Enter your full name"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  placeholder={t('firstName')}
                 />
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <User className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> {t('lastName')}
+                </label>
+                <input 
+                  type="text"
+                  disabled={!isEditing}
+                  className="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-gray-900 outline-none disabled:bg-gray-50 disabled:text-gray-500 transition-all"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  placeholder={t('lastName')}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
                   <Phone className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> Phone Number

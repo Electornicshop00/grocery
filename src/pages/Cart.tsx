@@ -25,15 +25,18 @@ export default function Cart() {
   const [isUploading, setIsUploading] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     phone: '',
     address: ''
   });
 
   useEffect(() => {
     if (profile) {
+      const nameParts = (profile.displayName || '').split(' ');
       setFormData({
-        name: profile.displayName || '',
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
         phone: profile.phone || '',
         address: profile.address || ''
       });
@@ -67,6 +70,45 @@ export default function Cart() {
     );
   };
 
+  const validateDetails = () => {
+    const nameRegex = /^[a-zA-Z]{2,30}$/;
+    const phoneRegex = /^(\+91)?[6789]\d{9}$/;
+
+    if (!formData.firstName.trim()) {
+      showToast('Please enter your first name', 'error');
+      return false;
+    }
+    if (!nameRegex.test(formData.firstName.trim())) {
+      showToast('First name should be letters only (2-30 chars)', 'error');
+      return false;
+    }
+    if (!formData.lastName.trim()) {
+      showToast('Please enter your last name', 'error');
+      return false;
+    }
+    if (!nameRegex.test(formData.lastName.trim())) {
+      showToast('Last name should be letters only (2-30 chars)', 'error');
+      return false;
+    }
+    if (!formData.phone.trim()) {
+      showToast('Please enter your phone number', 'error');
+      return false;
+    }
+    
+    // Remove any spaces or dashes for validation
+    const cleanPhone = formData.phone.trim().replace(/[\s\-]/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
+      showToast('Please enter a valid Indian phone number (e.g., +919876543210 or 9876543210)', 'error');
+      return false;
+    }
+    
+    if (!formData.address.trim()) {
+      showToast('Please enter your delivery address', 'error');
+      return false;
+    }
+    return true;
+  };
+
   const handlePlaceOrder = async () => {
     if (!user) {
       navigate('/auth');
@@ -78,17 +120,20 @@ export default function Cart() {
       return;
     }
 
+    if (!validateDetails()) return;
+
     try {
+      const fullName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
       if (profile && (!profile.displayName || !profile.phone || !profile.address)) {
         await updateUserProfile({
-          displayName: profile.displayName || formData.name,
+          displayName: profile.displayName || fullName,
           phone: profile.phone || formData.phone,
           address: profile.address || formData.address
         });
       }
 
       await placeOrder(cart, total, {
-        name: formData.name,
+        name: fullName,
         phone: formData.phone,
         address: formData.address
       }, paymentMethod);
@@ -125,7 +170,7 @@ export default function Cart() {
           </div>
           <div className="space-y-2">
             <p className="text-sm font-bold text-gray-400 uppercase">{t('deliveryTo')}</p>
-            <p className="font-bold text-gray-800">{formData.name}</p>
+            <p className="font-bold text-gray-800">{formData.firstName} {formData.lastName}</p>
             <p className="text-gray-600">{formData.address}</p>
           </div>
         </div>
@@ -366,18 +411,34 @@ export default function Cart() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-800">{t('deliveryDetails')}</h2>
               <div className="bg-white p-8 rounded-3xl border shadow-sm space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700">{t('fullName')}</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
-                    <input 
-                      required
-                      type="text" 
-                      placeholder={t('fullName')}
-                      className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">{t('firstName')}</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
+                      <input 
+                        required
+                        type="text" 
+                        placeholder={t('firstName')}
+                        className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700">{t('lastName')}</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
+                      <input 
+                        required
+                        type="text" 
+                        placeholder={t('lastName')}
+                        className="w-full pl-10 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-gray-900 outline-none"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -495,11 +556,9 @@ export default function Cart() {
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={() => {
-                      if (!formData.name || !formData.phone || !formData.address) {
-                        showToast('Please fill all delivery details', 'error');
-                        return;
+                      if (validateDetails()) {
+                        setStep('payment');
                       }
-                      setStep('payment');
                     }}
                     className="w-full text-white py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-100"
                     style={{ backgroundColor: 'rgb(39, 96, 27)' }}
