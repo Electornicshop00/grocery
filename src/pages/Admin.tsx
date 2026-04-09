@@ -242,10 +242,10 @@ export default function Admin() {
   };
 
   const stats = [
-    { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-gray-600', bg: 'bg-gray-50' },
-    { label: 'Total Revenue', value: `₹${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, icon: TrendingUp, color: 'text-gray-600', bg: 'bg-gray-50' },
-    { label: 'Active Products', value: products.length, icon: Package, color: 'text-gray-600', bg: 'bg-gray-50' },
-    { label: 'Low Stock Items', value: products.filter(p => p.stock < 10).length, icon: Clock, color: 'text-gray-600', bg: 'bg-gray-50' },
+    { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-white', bg: 'bg-green-600' },
+    { label: 'Total Revenue', value: `₹${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, icon: TrendingUp, color: 'text-white', bg: 'bg-green-600' },
+    { label: 'Active Products', value: products.length, icon: Package, color: 'text-white', bg: 'bg-green-600' },
+    { label: 'Low Stock Items', value: products.filter(p => p.stock < 10).length, icon: Clock, color: 'text-white', bg: 'bg-green-600' },
   ];
 
   const activeOrdersCount = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
@@ -294,7 +294,10 @@ export default function Admin() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border flex items-center gap-3 md:gap-4 transition-colors">
-            <div className={`${stat.bg} ${stat.color} p-2 md:p-4 rounded-xl shrink-0`}>
+            <div 
+              className={`${stat.color} p-2 md:p-4 rounded-xl shrink-0`}
+              style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+            >
               <stat.icon className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <div className="min-w-0">
@@ -313,7 +316,10 @@ export default function Admin() {
           className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3">
-            <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
+            <div 
+              className="p-2 rounded-lg text-white"
+              style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+            >
               <ShieldAlert className="w-6 h-6" />
             </div>
             <div>

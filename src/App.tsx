@@ -66,8 +66,8 @@ export default function App() {
                       </Routes>
                     </main>
                     <footer 
-                      className="border-t py-8 text-center text-gray-500 transition-colors duration-300"
-                      style={{ backgroundColor: 'rgb(255, 255, 255)' }}
+                      className="border-t py-8 text-center text-white transition-colors duration-300"
+                      style={{ backgroundColor: 'rgb(39, 96, 27)' }}
                     >
                       <p>&copy; 2026 FreshCart Grocery. All rights reserved.</p>
                     </footer>

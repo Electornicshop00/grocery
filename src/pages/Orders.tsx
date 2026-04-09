@@ -37,7 +37,7 @@ export default function Orders() {
       case 'shipped':
         return { bg: 'bg-gray-300', text: 'text-gray-800', border: 'border-gray-400', icon: Truck };
       case 'delivered':
-        return { bg: 'bg-gray-900', text: 'text-white', border: 'border-gray-900', icon: CheckCircle };
+        return { bg: 'bg-green-600', text: 'text-white', border: 'border-green-600', icon: CheckCircle };
       case 'cancelled':
         return { bg: 'bg-gray-100', text: 'text-gray-400', border: 'border-gray-200', icon: XCircle };
       default:
@@ -119,7 +119,10 @@ export default function Orders() {
                 className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${statusStyle.bg} ${statusStyle.text}`}>
+                  <div 
+                    className={`p-3 rounded-xl ${statusStyle.text}`}
+                    style={order.status === 'delivered' ? { backgroundColor: 'rgb(39, 96, 27)' } : { backgroundColor: statusStyle.bg.replace('bg-', 'var(--') }}
+                  >
                     <statusStyle.icon className="w-6 h-6" />
                   </div>
                   <div>
@@ -181,21 +184,21 @@ export default function Orders() {
                           </h4>
                           <div className="bg-white p-4 rounded-xl border space-y-4">
                             <div className="flex items-start gap-3 text-sm">
-                              <MapPin className="w-5 h-5 text-gray-600 shrink-0" />
+                              <MapPin className="w-5 h-5 shrink-0" style={{ color: 'rgb(39, 96, 27)' }} />
                               <div>
                                 <p className="font-bold text-gray-800">Shipping Address</p>
                                 <p className="text-gray-600 leading-relaxed">{order.customerAddress}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <Phone className="w-5 h-5 text-gray-600 shrink-0" />
+                              <Phone className="w-5 h-5 shrink-0" style={{ color: 'rgb(39, 96, 27)' }} />
                               <div>
                                 <p className="font-bold text-gray-800">Contact Number</p>
                                 <p className="text-gray-600">{order.customerPhone}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <CreditCard className="w-5 h-5 text-gray-600 shrink-0" />
+                              <CreditCard className="w-5 h-5 shrink-0" style={{ color: 'rgb(39, 96, 27)' }} />
                               <div>
                                 <p className="font-bold text-gray-800">{t('paymentMethod')}</p>
                                 <p className="text-gray-600 font-medium">
@@ -206,7 +209,7 @@ export default function Orders() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-sm">
-                              <Calendar className="w-5 h-5 text-gray-600 shrink-0" />
+                              <Calendar className="w-5 h-5 shrink-0" style={{ color: 'rgb(39, 96, 27)' }} />
                               <div>
                                 <p className="font-bold text-gray-800">Order Placed</p>
                                 <p className="text-gray-600">{format(new Date(order.createdAt), 'MMMM d, yyyy HH:mm')}</p>

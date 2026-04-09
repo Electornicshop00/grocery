@@ -109,7 +109,8 @@ export default function Cart() {
         <motion.div 
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="bg-gray-100 w-32 h-32 rounded-full flex items-center justify-center mx-auto text-gray-900"
+          className="w-32 h-32 rounded-full flex items-center justify-center mx-auto text-white"
+          style={{ backgroundColor: 'rgb(39, 96, 27)' }}
         >
           <CheckCircle2 className="w-16 h-16" />
         </motion.div>
@@ -129,7 +130,11 @@ export default function Cart() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/orders" className="bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-black transition-colors">
+          <Link 
+            to="/orders" 
+            className="text-white px-8 py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-colors"
+            style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+          >
             {t('viewOrders')}
           </Link>
           <Link to="/" className="bg-gray-100 text-gray-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-colors">
@@ -161,9 +166,13 @@ export default function Cart() {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between relative">
             <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 -z-10"></div>
-            <div className={`absolute top-1/2 left-0 h-1 bg-gray-900 -translate-y-1/2 -z-10 transition-all duration-500`} style={{ 
-              width: step === 'details' ? '0%' : '100%' 
-            }}></div>
+            <div 
+              className={`absolute top-1/2 left-0 h-1 -translate-y-1/2 -z-10 transition-all duration-500`} 
+              style={{ 
+                width: step === 'details' ? '0%' : '100%',
+                backgroundColor: 'rgb(39, 96, 27)'
+              }}
+            ></div>
             
             {[
               { id: 'details', label: t('deliveryDetails'), icon: User },
@@ -173,11 +182,18 @@ export default function Cart() {
               const isCompleted = ['details', 'payment'].indexOf(step) > i;
               return (
                 <div key={s.id} className="flex flex-col items-center gap-1 md:gap-2">
-                  <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 md:border-4 transition-all duration-300 ${
-                    isActive ? 'bg-white border-gray-900 text-gray-900 scale-110' : 
-                    isCompleted ? 'bg-gray-900 border-gray-900 text-white' : 
-                    'bg-white border-gray-200 text-gray-400'
-                  }`}>
+                  <div 
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 md:border-4 transition-all duration-300 ${
+                      isActive ? 'bg-white scale-110' : 
+                      isCompleted ? 'text-white' : 
+                      'bg-white border-gray-200 text-gray-400'
+                    }`}
+                    style={
+                      isActive ? { borderColor: 'rgb(39, 96, 27)', color: 'rgb(39, 96, 27)' } :
+                      isCompleted ? { backgroundColor: 'rgb(39, 96, 27)', borderColor: 'rgb(39, 96, 27)' } :
+                      {}
+                    }
+                  >
                     <s.icon className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
                   <span className={`text-[10px] md:text-xs font-bold uppercase tracking-wider text-center max-w-[80px] md:max-w-none ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>{s.label}</span>
@@ -261,9 +277,12 @@ export default function Cart() {
                     paymentMethod === 'cod' ? 'border-gray-900 bg-gray-50 shadow-md' : 'border-gray-100 hover:border-gray-200'
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
-                    paymentMethod === 'cod' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'
-                  }`}>
+                  <div 
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+                      paymentMethod === 'cod' ? 'text-white' : 'bg-gray-100 text-gray-400'
+                    }`}
+                    style={paymentMethod === 'cod' ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
+                  >
                     <ShoppingBag className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold text-lg text-gray-800">{t('cod')}</h3>
@@ -276,9 +295,12 @@ export default function Cart() {
                     paymentMethod === 'upi' ? 'border-gray-900 bg-gray-50 shadow-md' : 'border-gray-100 hover:border-gray-200'
                   }`}
                 >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
-                    paymentMethod === 'upi' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'
-                  }`}>
+                  <div 
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${
+                      paymentMethod === 'upi' ? 'text-white' : 'bg-gray-100 text-gray-400'
+                    }`}
+                    style={paymentMethod === 'upi' ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
+                  >
                     <CreditCard className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold text-lg text-gray-800">{t('upi')}</h3>
@@ -296,7 +318,8 @@ export default function Cart() {
                       <div className="w-full space-y-4">
                         <a 
                           href={`upi://pay?pa=702986593@ybl&pn=FreshCart&am=${total}&cu=INR&tn=Order%20Payment`}
-                          className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98]"
+                          className="w-full text-white py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center gap-3 shadow-lg active:scale-[0.98]"
+                          style={{ backgroundColor: 'rgb(39, 96, 27)' }}
                         >
                           <CreditCard className="w-6 h-6" />
                           {t('payWithUpiApp')}
@@ -346,7 +369,7 @@ export default function Cart() {
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">{t('fullName')}</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
                     <input 
                       required
                       type="text" 
@@ -360,7 +383,7 @@ export default function Cart() {
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">{t('phoneNumber')}</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
                     <input 
                       required
                       type="tel" 
@@ -374,7 +397,7 @@ export default function Cart() {
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700">{t('deliveryAddress')}</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-4 text-gray-400 w-5 h-5" />
+                    <MapPin className="absolute left-3 top-4 w-5 h-5" style={{ color: 'rgb(39, 96, 27)' }} />
                     <textarea 
                       required
                       placeholder={t('deliveryAddress')}
@@ -458,8 +481,9 @@ export default function Cart() {
                     className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
                       isAdmin 
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
-                        : 'bg-gray-900 text-white hover:bg-black shadow-gray-100'
+                        : 'text-white hover:opacity-90 shadow-gray-100'
                     }`}
+                    style={!isAdmin ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
                   >
                     {t('proceedToCheckout')}
                     <ChevronRight className="w-5 h-5" />
@@ -477,7 +501,8 @@ export default function Cart() {
                       }
                       setStep('payment');
                     }}
-                    className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-100"
+                    className="w-full text-white py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-100"
+                    style={{ backgroundColor: 'rgb(39, 96, 27)' }}
                   >
                     {t('nextPayment')}
                     <ChevronRight className="w-5 h-5" />
@@ -498,8 +523,9 @@ export default function Cart() {
                       className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
                         isAdmin || isUploading
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
-                          : 'bg-gray-900 text-white hover:bg-black shadow-gray-100'
+                          : 'text-white hover:opacity-90 shadow-gray-100'
                       }`}
+                      style={!(isAdmin || isUploading) ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
                     >
                       {isUploading ? (
                         <>

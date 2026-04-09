@@ -55,7 +55,10 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
       >
-        <div className="bg-gray-900 p-8 text-white">
+        <div 
+          className="p-8 text-white"
+          style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+        >
           <div className="flex items-center gap-4">
             <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm">
               <User className="w-12 h-12" />
@@ -72,7 +75,7 @@ export default function Profile() {
             <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <User className="w-4 h-4" /> Full Name
+                  <User className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> Full Name
                 </label>
                 <input 
                   type="text"
@@ -86,7 +89,7 @@ export default function Profile() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <Phone className="w-4 h-4" /> Phone Number
+                  <Phone className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> Phone Number
                 </label>
                 <input 
                   type="tel"
@@ -100,7 +103,7 @@ export default function Profile() {
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> Delivery Address
+                  <MapPin className="w-4 h-4" style={{ color: 'rgb(39, 96, 27)' }} /> Delivery Address
                 </label>
                 <textarea 
                   disabled={!isEditing}

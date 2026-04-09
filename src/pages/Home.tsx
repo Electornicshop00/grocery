@@ -29,7 +29,10 @@ export default function Home() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative rounded-3xl overflow-hidden bg-gray-900 text-white p-6 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div 
+        className="relative rounded-3xl overflow-hidden text-white p-6 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8"
+        style={{ backgroundColor: 'rgb(39, 96, 27)' }}
+      >
         <div className="space-y-4 md:space-y-6 max-w-xl text-center md:text-left">
           <h1 className="text-3xl md:text-6xl font-extrabold leading-tight">
             {t('shop')} <br /> {t('thankYou').split('.')[0]}
@@ -78,9 +81,10 @@ export default function Home() {
               onClick={() => setSelectedCategory(category)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === category 
-                  ? 'bg-gray-900 text-white' 
+                  ? 'text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
+              style={selectedCategory === category ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
             >
               {category === 'All' ? t('all') : category}
             </button>

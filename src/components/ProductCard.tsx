@@ -86,14 +86,16 @@ export default function ProductCard({ product }: ProductCardProps) {
               <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 md:p-1 border border-gray-200">
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded text-gray-700"
+                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded"
+                  style={{ color: 'rgb(39, 96, 27)' }}
                 >
                   <Minus className="w-3 h-3 md:w-4 md:h-4" />
                 </button>
                 <span className="w-4 md:w-6 text-center text-xs md:text-base font-bold text-gray-900">{cartItem.quantity}</span>
                 <button 
                   onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded text-gray-700"
+                  className="p-0.5 md:p-1 hover:bg-gray-200 rounded"
+                  style={{ color: 'rgb(39, 96, 27)' }}
                   disabled={cartItem.quantity >= product.stock}
                 >
                   <Plus className="w-3 h-3 md:w-4 md:h-4" />
@@ -106,9 +108,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                 className={cn(
                   "flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 rounded-lg font-semibold transition-colors text-xs md:text-base",
                   product.stock > 0 
-                    ? "bg-gray-900 text-white hover:bg-black" 
+                    ? "text-white hover:opacity-90" 
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 )}
+                style={product.stock > 0 ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
               >
                 <ShoppingCart className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="hidden sm:inline">{t('addToCart').split(' ')[0]}</span>
@@ -123,9 +126,10 @@ export default function ProductCard({ product }: ProductCardProps) {
             className={cn(
               "w-full flex items-center justify-center gap-1 md:gap-2 py-1.5 md:py-2 rounded-lg font-bold transition-all text-xs md:text-base",
               product.stock > 0 
-                ? "bg-gray-800 text-white hover:bg-gray-900 shadow-sm" 
+                ? "text-white hover:opacity-90 shadow-sm" 
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             )}
+            style={product.stock > 0 ? { backgroundColor: 'rgb(39, 96, 27)' } : {}}
           >
             <CreditCard className="w-3 h-3 md:w-4 md:h-4" />
             {t('checkout')}
