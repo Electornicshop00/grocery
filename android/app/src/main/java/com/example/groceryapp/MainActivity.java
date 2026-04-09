@@ -9,7 +9,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.webkit.GeolocationPermissions;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 1001;
     private TextView statusText;
     private Button grantButton;
+    private WebView webView;
+    private LinearLayout permissionContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
 
         statusText = findViewById(R.id.status_text);
         grantButton = findViewById(R.id.grant_permissions_button);
+        webView = findViewById(R.id.webview);
+        permissionContainer = findViewById(R.id.permission_container);
+
+        setupWebView();
 
         grantButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,7 +61,31 @@ public class MainActivity extends AppCompatActivity {
         // Auto-request on first open if not granted
         if (!allPermissionsGranted()) {
             checkAndRequestPermissions();
+        } else {
+            showWebView();
         }
+    }
+
+    private void setupWebView() {
+        WebSettings webSettings = webView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setGeolocationEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+
+        webView.setWebViewClient(new WebViewClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+                callback.invoke(origin, true, false);
+            }
+        });
+
+        webView.loadUrl("https://grocery-six-wheat.vercel.app/");
+    }
+
+    private void showWebView() {
+        permissionContainer.setVisibility(View.GONE);
+        webView.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -203,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (!someDenied) {
                 Toast.makeText(this, "Permissions Granted!", Toast.LENGTH_SHORT).show();
+                showWebView();
             } else if (permanentlyDenied) {
                 showSettingsDialog();
             } else {
