@@ -13,11 +13,14 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+
+import com.permissionx.guolindev.PermissionX;
+import com.permissionx.guolindev.callback.ExplainReasonCallback;
+import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
+import com.permissionx.guolindev.callback.RequestCallback;
+import com.permissionx.guolindev.request.ExplainScope;
+import com.permissionx.guolindev.request.ForwardScope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,70 +80,49 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkAndRequestPermissions() {
         List<String> permissionsNeeded = new ArrayList<>();
+        permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissionsNeeded.add(Manifest.permission.READ_CONTACTS);
+        permissionsNeeded.add(Manifest.permission.CAMERA);
+        permissionsNeeded.add(Manifest.permission.CALL_PHONE);
 
-        // Location
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        }
-
-        // Storage / Photos (Android 13+ support)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
-            }
+            permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
         } else {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                permissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-            }
+            permissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
 
-        if (!permissionsNeeded.isEmpty()) {
-            showPermissionExplanationDialog(permissionsNeeded);
-        }
-    }
-
-    private void showPermissionExplanationDialog(final List<String> permissions) {
-        new AlertDialog.Builder(this)
-                .setTitle("Permissions Required")
-                .setMessage("We need your location to show nearby stores and storage access to allow you to upload profile photos and save receipts. Would you like to grant these permissions?")
-                .setPositiveButton("Allow", new DialogInterface.OnClickListener() {
+        PermissionX.init(this)
+                .permissions(permissionsNeeded)
+                .explainReasonBeforeRequest()
+                .onExplainRequestReason(new ExplainReasonCallback() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActivityCompat.requestPermissions(MainActivity.this, 
-                                permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+                    public void onExplainReason(ExplainScope scope, List<String> deniedList) {
+                        scope.showRequestReasonDialog(deniedList, 
+                                "Core fundamental are based on these permissions", 
+                                "OK", "Cancel");
                     }
                 })
-                .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
+                .onForwardToSettings(new ForwardToSettingsCallback() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Toast.makeText(MainActivity.this, "Permissions denied. Some features may be limited.", Toast.LENGTH_SHORT).show();
+                    public void onForwardToSettings(ForwardScope scope, List<String> deniedList) {
+                        scope.showForwardToSettingsDialog(deniedList, 
+                                "You need to allow necessary permissions in Settings manually", 
+                                "OK", "Cancel");
                     }
                 })
-                .create()
-                .show();
+                .request(new RequestCallback() {
+                    @Override
+                    public void onResult(boolean allGranted, List<String> grantedList, List<String> deniedList) {
+                        if (allGranted) {
+                            Toast.makeText(MainActivity.this, "All permissions are granted", Toast.LENGTH_LONG).show();
+                            webView.reload();
+                        } else {
+                            Toast.makeText(MainActivity.this, "These permissions are denied: " + deniedList, Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-
-            if (allGranted) {
-                Toast.makeText(this, "Permissions granted!", Toast.LENGTH_SHORT).show();
-                webView.reload(); // Reload to apply permissions
-            } else {
-                Toast.makeText(this, "Permissions denied. Please enable them in settings for full functionality.", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
+    // Removed manual explanation dialog and result handling as PermissionX handles it now
 }
