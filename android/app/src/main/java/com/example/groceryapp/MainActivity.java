@@ -40,11 +40,9 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         setupWebView();
 
-        // Check and request permissions only on first launch
-        if (isFirstLaunch()) {
-            checkAndRequestPermissions();
-            setFirstLaunchFalse();
-        }
+        // Check and request permissions on app start
+        // PermissionX automatically handles already granted permissions
+        checkAndRequestPermissions();
     }
 
     private boolean isFirstLaunch() {
@@ -90,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
         } else {
             permissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            // WRITE_EXTERNAL_STORAGE is required for Android 10 and below
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.Q) {
+                permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
         }
 
         PermissionX.init(this)
