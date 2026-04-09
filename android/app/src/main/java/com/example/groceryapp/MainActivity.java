@@ -1,17 +1,16 @@
 package com.example.groceryapp;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.webkit.GeolocationPermissions;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -25,95 +24,115 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PERMISSION_REQUEST_CODE = 100;
-    private WebView webView;
+    private static final int PERMISSION_REQUEST_CODE = 1001;
+    private TextView statusText;
+    private Button grantButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        webView = findViewById(R.id.webview);
-        setupWebView();
+        statusText = findViewById(R.id.status_text);
+        grantButton = findViewById(R.id.grant_permissions_button);
 
-        // Check and request permissions on app start
-        checkAndRequestPermissions();
-    }
-
-    private void setupWebView() {
-        WebSettings webSettings = webView.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setGeolocationEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-
-        webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient() {
+        grantButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-                // This handles geolocation requests from the WebView
-                callback.invoke(origin, true, false);
+            public void onClick(View v) {
+                checkAndRequestPermissions();
             }
         });
 
-        // Load your grocery app URL
-        webView.loadUrl("https://ais-dev-vvnkyfkghaxtpfq3fsvknb-6194796437.asia-southeast1.run.app");
+        // Initial check
+        updateStatus();
+        
+        // Auto-request on first open if not granted
+        if (!allPermissionsGranted()) {
+            checkAndRequestPermissions();
+        }
     }
 
-    private void checkAndRequestPermissions() {
-        List<String> permissionsNeeded = new ArrayList<>();
+    /**
+     * Returns the list of permissions required based on the Android version.
+     */
+    private String[] getRequiredPermissions() {
+        List<String> permissions = new ArrayList<>();
         
-        // Location for finding stores
-        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_FINE_LOCATION);
-        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_COARSE_LOCATION);
-        
-        // Contacts for sharing lists
-        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_CONTACTS);
-        
-        // Camera for scanning barcodes
-        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.CAMERA);
-        
-        // Phone for calling support
-        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.CALL_PHONE);
+        // Location is required for all versions (API 23+)
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
 
-        // Storage/Photos for profile and receipts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_MEDIA_IMAGES);
+            // Android 13+ (API 33+)
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
+            permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
+            permissions.add(Manifest.permission.READ_MEDIA_AUDIO);
         } else {
-            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_EXTERNAL_STORAGE);
+            // Android 6 to 12 (API 23 to 32)
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
-                addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                // WRITE_EXTERNAL_STORAGE is deprecated in API 30+ (Android 11+)
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
         }
 
-        if (!permissionsNeeded.isEmpty()) {
-            // Show explanation if needed
-            boolean shouldShowRationale = false;
-            for (String permission : permissionsNeeded) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                    shouldShowRationale = true;
+        return permissions.toArray(new String[0]);
+    }
+
+    /**
+     * Checks if all required permissions are granted.
+     */
+    private boolean allPermissionsGranted() {
+        for (String permission : getRequiredPermissions()) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks and requests permissions, showing rationale if necessary.
+     */
+    private void checkAndRequestPermissions() {
+        String[] permissions = getRequiredPermissions();
+        List<String> listPermissionsNeeded = new ArrayList<>();
+
+        for (String p : permissions) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) {
+                listPermissionsNeeded.add(p);
+            }
+        }
+
+        if (!listPermissionsNeeded.isEmpty()) {
+            // Check if we should show rationale
+            boolean showRationale = false;
+            for (String p : listPermissionsNeeded) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, p)) {
+                    showRationale = true;
                     break;
                 }
             }
 
-            if (shouldShowRationale) {
-                showExplanationDialog(permissionsNeeded);
+            if (showRationale) {
+                showRationaleDialog(listPermissionsNeeded);
             } else {
-                ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+                ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
             }
+        } else {
+            updateStatus();
+            Toast.makeText(this, "All permissions already granted!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void addPermissionIfNotGranted(List<String> list, String permission) {
-        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-            list.add(permission);
-        }
-    }
-
-    private void showExplanationDialog(final List<String> permissions) {
+    /**
+     * Shows a dialog explaining why permissions are needed.
+     */
+    private void showRationaleDialog(final List<String> permissions) {
         new AlertDialog.Builder(this)
                 .setTitle("Permissions Required")
-                .setMessage("Our Grocery App needs these permissions to help you find nearby stores, scan product barcodes, share lists with friends, and call support directly. Would you like to grant them now?")
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                .setMessage("This app requires Location and Storage permissions to function correctly. Please grant them to continue.")
+                .setPositiveButton("Grant", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ActivityCompat.requestPermissions(MainActivity.this, permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
@@ -123,24 +142,81 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Shows a dialog when permissions are permanently denied, redirecting to settings.
+     */
+    private void showSettingsDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permissions Permanently Denied")
+                .setMessage("You have permanently denied some required permissions. Please enable them in the app settings to use all features.")
+                .setPositiveButton("Go to Settings", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        openAppSettings();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    /**
+     * Opens the system app settings screen.
+     */
+    private void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", getPackageName(), null);
+        intent.setData(uri);
+        startActivity(intent);
+    }
+
+    private void updateStatus() {
+        if (allPermissionsGranted()) {
+            statusText.setText("Permission Status: ALL GRANTED");
+            statusText.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+            grantButton.setEnabled(false);
+            grantButton.setText("Permissions Granted");
+        } else {
+            statusText.setText("Permission Status: DENIED / PENDING");
+            statusText.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+            grantButton.setEnabled(true);
+            grantButton.setText("Grant Permissions");
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
+            boolean someDenied = false;
+            boolean permanentlyDenied = false;
+
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    someDenied = true;
+                    // Check if permanently denied
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])) {
+                        permanentlyDenied = true;
+                    }
                 }
             }
 
-            if (allGranted) {
-                Toast.makeText(this, "All permissions are granted", Toast.LENGTH_LONG).show();
-                webView.reload();
+            if (!someDenied) {
+                Toast.makeText(this, "Permissions Granted!", Toast.LENGTH_SHORT).show();
+            } else if (permanentlyDenied) {
+                showSettingsDialog();
             } else {
-                Toast.makeText(this, "Some permissions were denied. You can enable them in Settings for full functionality.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Permissions Denied", Toast.LENGTH_SHORT).show();
             }
+            
+            updateStatus();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Update status when returning from settings
+        updateStatus();
     }
 }
