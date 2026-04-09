@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.webkit.GeolocationPermissions;
 import android.webkit.WebChromeClient;
@@ -13,14 +14,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.permissionx.guolindev.PermissionX;
-import com.permissionx.guolindev.callback.ExplainReasonCallback;
-import com.permissionx.guolindev.callback.ForwardToSettingsCallback;
-import com.permissionx.guolindev.callback.RequestCallback;
-import com.permissionx.guolindev.request.ExplainScope;
-import com.permissionx.guolindev.request.ForwardScope;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +26,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private static final String PREFS_NAME = "GroceryAppPrefs";
-    private static final String KEY_IS_FIRST_LAUNCH = "is_first_launch";
     private WebView webView;
 
     @Override
@@ -41,20 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setupWebView();
 
         // Check and request permissions on app start
-        // PermissionX automatically handles already granted permissions
         checkAndRequestPermissions();
-    }
-
-    private boolean isFirstLaunch() {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getBoolean(KEY_IS_FIRST_LAUNCH, true);
-    }
-
-    private void setFirstLaunchFalse() {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean(KEY_IS_FIRST_LAUNCH, false);
-        editor.apply();
     }
 
     private void setupWebView() {
@@ -78,53 +61,86 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkAndRequestPermissions() {
         List<String> permissionsNeeded = new ArrayList<>();
-        permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
-        permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
-        permissionsNeeded.add(Manifest.permission.READ_CONTACTS);
-        permissionsNeeded.add(Manifest.permission.CAMERA);
-        permissionsNeeded.add(Manifest.permission.CALL_PHONE);
+        
+        // Location for finding stores
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_FINE_LOCATION);
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.ACCESS_COARSE_LOCATION);
+        
+        // Contacts for sharing lists
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_CONTACTS);
+        
+        // Camera for scanning barcodes
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.CAMERA);
+        
+        // Phone for calling support
+        addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.CALL_PHONE);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            permissionsNeeded.add(Manifest.permission.READ_MEDIA_IMAGES);
+        // Storage/Photos for profile and receipts
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_MEDIA_IMAGES);
         } else {
-            permissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-            // WRITE_EXTERNAL_STORAGE is required for Android 10 and below
-            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.Q) {
-                permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+                addPermissionIfNotGranted(permissionsNeeded, Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
         }
 
-        PermissionX.init(this)
-                .permissions(permissionsNeeded)
-                .explainReasonBeforeRequest()
-                .onExplainRequestReason(new ExplainReasonCallback() {
-                    @Override
-                    public void onExplainReason(ExplainScope scope, List<String> deniedList) {
-                        scope.showRequestReasonDialog(deniedList, 
-                                "Core fundamental are based on these permissions", 
-                                "OK", "Cancel");
-                    }
-                })
-                .onForwardToSettings(new ForwardToSettingsCallback() {
-                    @Override
-                    public void onForwardToSettings(ForwardScope scope, List<String> deniedList) {
-                        scope.showForwardToSettingsDialog(deniedList, 
-                                "You need to allow necessary permissions in Settings manually", 
-                                "OK", "Cancel");
-                    }
-                })
-                .request(new RequestCallback() {
-                    @Override
-                    public void onResult(boolean allGranted, List<String> grantedList, List<String> deniedList) {
-                        if (allGranted) {
-                            Toast.makeText(MainActivity.this, "All permissions are granted", Toast.LENGTH_LONG).show();
-                            webView.reload();
-                        } else {
-                            Toast.makeText(MainActivity.this, "These permissions are denied: " + deniedList, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
+        if (!permissionsNeeded.isEmpty()) {
+            // Show explanation if needed
+            boolean shouldShowRationale = false;
+            for (String permission : permissionsNeeded) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
+                    shouldShowRationale = true;
+                    break;
+                }
+            }
+
+            if (shouldShowRationale) {
+                showExplanationDialog(permissionsNeeded);
+            } else {
+                ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+            }
+        }
     }
 
-    // Removed manual explanation dialog and result handling as PermissionX handles it now
+    private void addPermissionIfNotGranted(List<String> list, String permission) {
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            list.add(permission);
+        }
+    }
+
+    private void showExplanationDialog(final List<String> permissions) {
+        new AlertDialog.Builder(this)
+                .setTitle("Permissions Required")
+                .setMessage("Our Grocery App needs these permissions to help you find nearby stores, scan product barcodes, share lists with friends, and call support directly. Would you like to grant them now?")
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ActivityCompat.requestPermissions(MainActivity.this, permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+
+            if (allGranted) {
+                Toast.makeText(this, "All permissions are granted", Toast.LENGTH_LONG).show();
+                webView.reload();
+            } else {
+                Toast.makeText(this, "Some permissions were denied. You can enable them in Settings for full functionality.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }
