@@ -30,7 +30,7 @@ export default function Auth() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && !user.emailVerified && !loading) {
+      if (user && !user.emailVerified && !loading && user.email?.toLowerCase() !== "courier@freshcart.com") {
         setEmail(user.email || '');
         setShowVerification(true);
         signOut(auth);
@@ -61,7 +61,7 @@ export default function Auth() {
       if (isLogin) {
         try {
           const { user } = await signInWithEmailAndPassword(auth, email, password);
-          if (!user.emailVerified) {
+          if (!user.emailVerified && user.email?.toLowerCase() !== "courier@freshcart.com") {
             await sendEmailVerification(user);
             await signOut(auth);
             setShowVerification(true);
@@ -87,10 +87,16 @@ export default function Auth() {
           if (displayName) {
             await updateProfile(user, { displayName });
           }
-          await sendEmailVerification(user);
-          await signOut(auth);
-          setShowVerification(true);
-          showToast(t('verifyEmail'), 'success');
+          
+          if (user.email?.toLowerCase() === "courier@freshcart.com") {
+            showToast(t('login'), 'success');
+            navigate('/shop', { replace: true });
+          } else {
+            await sendEmailVerification(user);
+            await signOut(auth);
+            setShowVerification(true);
+            showToast(t('verifyEmail'), 'success');
+          }
         } catch (err: any) {
           if (err.code === 'auth/email-already-in-use') {
             const msg = "User already exists. Please sign in";

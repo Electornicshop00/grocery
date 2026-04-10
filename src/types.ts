@@ -32,6 +32,6 @@ export interface UserProfile {
   displayName: string;
   phone?: string;
   address?: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'admin' | 'courier';
   createdAt: string;
 }

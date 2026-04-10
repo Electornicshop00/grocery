@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isCourier: boolean;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
 }
 
@@ -70,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isCourier, setIsCourier] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -100,7 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           uid: user.uid,
           email: user.email || '',
           displayName: user.displayName || '',
-          role: user.email?.toLowerCase() === "himangsusing37@gmail.com" ? 'admin' : 'customer',
+          role: user.email?.toLowerCase() === "himangsusing37@gmail.com" ? 'admin' : 
+                user.email?.toLowerCase() === "courier@freshcart.com" ? 'courier' : 'customer',
           createdAt: Timestamp.now(),
         };
         try {
@@ -123,6 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isHardcodedAdmin = user?.email?.toLowerCase() === "himangsusing37@gmail.com";
     const isProfileAdmin = profile?.role === 'admin';
     setIsAdmin(!!(isHardcodedAdmin || isProfileAdmin));
+
+    const isHardcodedCourier = user?.email?.toLowerCase() === "courier@freshcart.com";
+    const isProfileCourier = profile?.role === 'courier';
+    setIsCourier(!!(isHardcodedCourier || isProfileCourier));
   }, [user, profile]);
 
   const updateUserProfile = async (data: Partial<UserProfile>) => {
@@ -136,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, isCourier, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
