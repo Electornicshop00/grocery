@@ -134,8 +134,10 @@ service cloud.firestore {
       
       allow update: if isAuthenticated() && 
                     (
-                      (isAdmin() && request.resource.data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']) || 
-                      (isCourier() && request.resource.data.status in ['shipped', 'delivered'] && request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'courierCoords']) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'courierCoords'])) ||
+                      (isAdmin() && isValidOrder(request.resource.data)) || 
+                      (isCourier() && request.resource.data.status in ['shipped', 'delivered'] && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'courierCoords']) &&
+                       request.resource.data.userId == resource.data.userId) ||
                       (isOwner(resource.data.userId) && 
                        isValidOrder(request.resource.data) && 
                        request.resource.data.status == resource.data.status)

@@ -27,6 +27,7 @@ import {
   CreditCard,
   Upload,
   Loader2,
+  Info,
   Settings,
   Bell,
   Volume2,
@@ -105,7 +106,11 @@ export default function Admin() {
 
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          showToast('Notifications enabled!', 'success');
+        }
+      });
     }
 
     const handleNewOrder = (data: { customerName: string, total: number }) => {
@@ -113,17 +118,30 @@ export default function Admin() {
         showToast(`🛍️ New Order Received from ${data.customerName}! (₹${data.total.toFixed(2)})`, 'success');
         
         // System notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification('New Order Received', {
-            body: `Order from ${data.customerName} for ₹${data.total.toFixed(2)}`,
-            icon: 'https://picsum.photos/seed/grocery/192/192'
-          });
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            try {
+              new Notification('New Order Received', {
+                body: `Order from ${data.customerName} for ₹${data.total.toFixed(2)}`,
+                icon: 'https://picsum.photos/seed/grocery/192/192',
+                tag: 'new-order' // Prevent duplicate notifications
+              });
+            } catch (err) {
+              console.warn("System notification failed:", err);
+            }
+          } else if (Notification.permission === 'denied') {
+            console.warn("Notifications are blocked by the user.");
+          }
         }
 
         if (notificationSettings.sound) {
           // Using a clear, professional notification sound
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-          audio.play().catch(e => console.warn("Audio playback failed (browser policy):", e));
+          audio.play().catch(e => {
+            console.warn("Audio playback failed (browser policy):", e);
+            // Don't show toast every time, just log it. 
+            // The user needs to interact with the page once.
+          });
         }
 
         if (notificationSettings.vibration && 'vibrate' in navigator) {
@@ -397,7 +415,18 @@ export default function Admin() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">Sound Alerts</p>
-                      <p className="text-xs text-gray-500">Play sound for new orders</p>
+                      <button 
+                        onClick={() => {
+                          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                          audio.play().catch(e => {
+                            console.warn("Audio playback failed:", e);
+                            showToast("Please click again to enable sound", "info");
+                          });
+                        }}
+                        className="text-[10px] text-blue-600 hover:underline font-bold"
+                      >
+                        Test Sound
+                      </button>
                     </div>
                   </div>
                   <button
@@ -433,7 +462,16 @@ export default function Admin() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-800">New Orders</p>
-                      <p className="text-xs text-gray-500">Alert for incoming orders</p>
+                      {('Notification' in window && Notification.permission !== 'granted') ? (
+                        <button 
+                          onClick={() => Notification.requestPermission().then(p => showToast(`Permission: ${p}`, 'info'))}
+                          className="text-[10px] text-orange-600 hover:underline font-bold"
+                        >
+                          Enable Pop-ups
+                        </button>
+                      ) : (
+                        <p className="text-xs text-gray-500">Alert for incoming orders</p>
+                      )}
                     </div>
                   </div>
                   <button
@@ -443,6 +481,20 @@ export default function Admin() {
                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.newOrders ? 'right-1' : 'left-1'}`} />
                   </button>
                 </div>
+              </div>
+
+              {/* Troubleshooting Info */}
+              <div className="mt-6 p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-3">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <Info className="w-5 h-5" />
+                  <h3 className="font-bold">Notification Troubleshooting</h3>
+                </div>
+                <ul className="text-xs text-blue-700 space-y-2 list-disc pl-5">
+                  <li><strong>Mobile Sound:</strong> Browsers block sound until you click something. Use the <strong>Test Sound</strong> button above to "unlock" audio.</li>
+                  <li><strong>iOS Users:</strong> You <strong>must</strong> add this app to your Home Screen (Share &gt; Add to Home Screen) for pop-up notifications to work.</li>
+                  <li><strong>Permissions:</strong> Ensure you haven't blocked notifications in your browser settings. Look for a lock icon in the address bar.</li>
+                  <li><strong>Do Not Disturb:</strong> Check if your phone is in "Silent" or "Do Not Disturb" mode.</li>
+                </ul>
               </div>
             </div>
           </motion.div>

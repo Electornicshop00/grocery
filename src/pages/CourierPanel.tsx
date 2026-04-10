@@ -114,25 +114,39 @@ export default function CourierPanel() {
       });
       
       // Geocode addresses for active orders if coords not already present
-      const ordersWithCoords = await Promise.all(ordersData.map(async (order) => {
-        if (order.status === 'delivered' || order.status === 'cancelled') return order;
+      const ordersWithCoords = [];
+      for (const order of ordersData) {
+        if (order.status === 'delivered' || order.status === 'cancelled') {
+          ordersWithCoords.push(order);
+          continue;
+        }
         
         // Use customerCoords if available from checkout
         if (order.customerCoords) {
-          return { ...order, coords: [order.customerCoords.lat, order.customerCoords.lng] as [number, number] };
+          ordersWithCoords.push({ ...order, coords: [order.customerCoords.lat, order.customerCoords.lng] as [number, number] });
+          continue;
         }
         
         try {
-          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(order.customerAddress)}&limit=1`);
+          // Add a small delay to respect Nominatim rate limits (1 request per second)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(order.customerAddress)}&limit=1`, {
+            headers: {
+              'User-Agent': 'GroceryApp/1.0'
+            }
+          });
           const data = await response.json();
           if (data && data.length > 0) {
-            return { ...order, coords: [parseFloat(data[0].lat), parseFloat(data[0].lon)] as [number, number] };
+            ordersWithCoords.push({ ...order, coords: [parseFloat(data[0].lat), parseFloat(data[0].lon)] as [number, number] });
+          } else {
+            ordersWithCoords.push(order);
           }
         } catch (error) {
           console.error("Geocoding error:", error);
+          ordersWithCoords.push(order);
         }
-        return order;
-      }));
+      }
 
       setOrders(ordersWithCoords);
       
