@@ -25,7 +25,11 @@ import {
   Phone,
   CreditCard,
   Upload,
-  Loader2
+  Loader2,
+  Settings,
+  Bell,
+  Volume2,
+  Smartphone
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
@@ -57,6 +61,12 @@ export default function Admin() {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    sound: true,
+    vibration: true,
+    newOrders: true
+  });
   const [productForm, setProductForm] = useState({
     name: '',
     price: 0,
@@ -252,6 +262,11 @@ export default function Admin() {
 
   const lowStockProducts = products.filter(p => p.stock < 10);
 
+  const toggleSetting = (key: keyof typeof notificationSettings) => {
+    setNotificationSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} setting updated`, 'success');
+  };
+
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(productSearchTerm.toLowerCase());
     const matchesLowStock = !showLowStockOnly || p.stock < 10;
@@ -266,6 +281,13 @@ export default function Admin() {
           <p className="text-gray-500">Manage your store inventory and customer orders.</p>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 rounded-xl transition-all ${showSettings ? 'bg-gray-900 text-white' : 'bg-white text-gray-600 border hover:bg-gray-50 shadow-sm'}`}
+            title="Notification Settings"
+          >
+            <Settings className="w-6 h-6" />
+          </button>
           <div className="flex bg-white rounded-xl p-1 border shadow-sm">
             <button 
               onClick={() => setActiveTab('products')}
@@ -289,6 +311,80 @@ export default function Admin() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-white rounded-3xl border p-6 shadow-sm space-y-6">
+              <div className="flex items-center gap-3 border-b pb-4">
+                <Bell className="w-6 h-6 text-green-600" />
+                <h2 className="text-xl font-bold text-gray-800">Admin Notification Settings</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Volume2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Sound Alerts</p>
+                      <p className="text-xs text-gray-500">Play sound for new orders</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('sound')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.sound ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.sound ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Smartphone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Vibration</p>
+                      <p className="text-xs text-gray-500">Vibrate on new alerts</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('vibration')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.vibration ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.vibration ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Bell className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">New Orders</p>
+                      <p className="text-xs text-gray-500">Alert for incoming orders</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('newOrders')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.newOrders ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.newOrders ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

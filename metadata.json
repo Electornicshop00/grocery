@@ -2,6 +2,7 @@
   "name": "Grocery App",
   "description": "A professional grocery shopping platform with online ordering, stock management, and admin dashboard.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "notifications"
   ]
 }

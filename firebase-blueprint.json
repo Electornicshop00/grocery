@@ -40,7 +40,7 @@
         "displayName": { "type": "string" },
         "phone": { "type": "string" },
         "address": { "type": "string" },
-        "role": { "type": "string", "enum": ["customer", "admin"] },
+        "role": { "type": "string", "enum": ["customer", "admin", "courier"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role"]

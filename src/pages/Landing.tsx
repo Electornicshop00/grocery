@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBasket, ArrowRight, ShieldCheck, MapPin, Bell } from 'lucide-react';
+import { ShoppingBasket, ArrowRight, ShieldCheck, MapPin, Bell, Database } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Landing() {
@@ -17,25 +17,32 @@ export default function Landing() {
   const requestPermissions = async () => {
     setPermissionStatus('requesting');
     
-    // Simulate requesting multiple permissions (Location, Notifications)
     try {
-      // Request Geolocation
-      await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+      // 1. Request Geolocation
+      const locationPromise = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
       });
 
-      // If we got here, location is granted
+      // 2. Request Notifications
+      const notificationPromise = Notification.requestPermission();
+
+      // 3. Request Storage Persistence (if supported)
+      let storagePromise = Promise.resolve(true);
+      if (navigator.storage && navigator.storage.persist) {
+        storagePromise = navigator.storage.persist();
+      }
+
+      // Wait for all (or at least try)
+      await Promise.allSettled([locationPromise, notificationPromise, storagePromise]);
+
       setPermissionStatus('granted');
       
-      // Short delay for visual feedback
       setTimeout(() => {
         navigate('/auth');
       }, 1000);
     } catch (error) {
-      console.error('Permission denied or timed out', error);
-      // Even if denied, we'll proceed to signup but maybe show a toast later
-      // For this demo, we'll just go to auth after a bit
-      setPermissionStatus('granted'); // Mocking success for smooth flow
+      console.error('Permission request error', error);
+      setPermissionStatus('granted'); 
       setTimeout(() => {
         navigate('/auth');
       }, 1000);
@@ -120,6 +127,13 @@ export default function Landing() {
                   <div>
                     <p className="font-bold text-gray-900 text-sm">Notifications</p>
                     <p className="text-xs text-gray-500">To keep you updated on your order status.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50">
+                  <Database className="w-5 h-5 text-purple-600 mt-1" />
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">Storage Access</p>
+                    <p className="text-xs text-gray-500">To save your preferences and cart data offline.</p>
                   </div>
                 </div>
               </div>

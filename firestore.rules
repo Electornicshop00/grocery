@@ -50,16 +50,18 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (
-          request.auth.token.email == "himangsusing37@gmail.com" ||
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+          request.auth.token.email.matches("(?i)himangsusing37@gmail.com") ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
         );
     }
 
     function isCourier() {
       return isAuthenticated() && 
         (
-          request.auth.token.email == "courier@freshcart.com" ||
-          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'courier')
+          request.auth.token.email.matches("(?i)courier@freshcart.com") ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'courier')
         );
     }
 
@@ -71,33 +73,35 @@ service cloud.firestore {
       return data.keys().hasAll(['name', 'price', 'category', 'stock']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.price is number && data.price >= 0 &&
-             data.category is string &&
-             data.stock is int && data.stock >= 0;
+             data.category is string && data.category.size() < 50 &&
+             data.stock is int && data.stock >= 0 &&
+             (!('description' in data) || (data.description is string && data.description.size() < 1000)) &&
+             (!('image' in data) || (data.image is string && data.image.size() < 500));
     }
 
     function isValidOrder(data) {
       return data.keys().hasAll(['userId', 'items', 'total', 'status', 'createdAt']) &&
-             data.userId is string &&
-             data.items is list &&
+             data.userId is string && data.userId.size() < 100 &&
+             data.items is list && data.items.size() < 50 &&
              data.total is number && data.total >= 0 &&
              data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled'] &&
              isValidDate(data.createdAt) &&
-             (!('customerName' in data) || (data.customerName is string && data.customerName.size() > 0)) &&
-             (!('customerPhone' in data) || data.customerPhone is string) &&
-             (!('customerAddress' in data) || data.customerAddress is string) &&
+             (!('customerName' in data) || (data.customerName is string && data.customerName.size() > 0 && data.customerName.size() < 100)) &&
+             (!('customerPhone' in data) || (data.customerPhone is string && data.customerPhone.size() < 20)) &&
+             (!('customerAddress' in data) || (data.customerAddress is string && data.customerAddress.size() < 500)) &&
              (!('paymentMethod' in data) || data.paymentMethod in ['cod', 'whatsapp', 'upi']) &&
-             (!('trackingNumber' in data) || data.trackingNumber is string);
+             (!('trackingNumber' in data) || (data.trackingNumber is string && data.trackingNumber.size() < 100));
     }
 
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
-             data.uid is string &&
-             data.email is string &&
+             data.uid is string && data.uid.size() < 100 &&
+             data.email is string && data.email.size() < 100 &&
              data.role in ['customer', 'admin', 'courier'] &&
              isValidDate(data.createdAt) &&
-             (data.get('phone', '') is string) &&
-             (data.get('address', '') is string) &&
-             (data.get('displayName', '') is string);
+             (data.get('phone', '') is string && data.get('phone', '').size() < 20) &&
+             (data.get('address', '') is string && data.get('address', '').size() < 500) &&
+             (data.get('displayName', '') is string && data.get('displayName', '').size() < 100);
     }
 
     // ===============================================================
@@ -121,9 +125,11 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin() || isCourier());
+      allow read: if isAuthenticated() && (isAdmin() || isCourier() || resource.data.userId == request.auth.uid);
+      
       allow create: if isAuthenticated() && isValidOrder(request.resource.data) && 
                     request.resource.data.userId == request.auth.uid;
+      
       allow update: if isAuthenticated() && 
                     (
                       (isAdmin() && request.resource.data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']) || 

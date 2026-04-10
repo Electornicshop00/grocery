@@ -4,7 +4,7 @@ import { collection, query, onSnapshot, doc, updateDoc, orderBy } from 'firebase
 import { Order } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Map as MapIcon, List, Navigation } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Map as MapIcon, List, Navigation, Settings, Bell, Volume2, Smartphone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -51,7 +51,10 @@ function RoutingControl({ waypoints }: { waypoints: L.LatLng[] }) {
     routingControlRef.current = (L as any).Routing.control({
       waypoints,
       lineOptions: {
-        styles: [{ color: '#27601b', weight: 6, opacity: 0.8 }]
+        styles: [
+          { color: '#166534', weight: 8, opacity: 0.9 }, // Darker green border
+          { color: '#22c55e', weight: 4, opacity: 1 }    // Brighter green center
+        ]
       },
       show: false, // Hide the instructions panel
       addWaypoints: false,
@@ -78,6 +81,13 @@ export default function CourierPanel() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([22.5726, 88.3639]); // Default to Kolkata
   const [routeWaypoints, setRouteWaypoints] = useState<L.LatLng[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({});
+  const [showSettings, setShowSettings] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    sound: true,
+    vibration: true,
+    newOrders: true
+  });
   const { showToast } = useToast();
   const { t } = useLanguage();
 
@@ -124,11 +134,35 @@ export default function CourierPanel() {
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
       const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { status: newStatus });
+      const updateData: any = { status: newStatus };
+      
+      // If there's a tracking number in the input, save it too
+      if (trackingInputs[orderId]) {
+        updateData.trackingNumber = trackingInputs[orderId];
+      }
+      
+      await updateDoc(orderRef, updateData);
       showToast(`Order status updated to ${newStatus}`, 'success');
     } catch (error) {
       console.error("Error updating order status:", error);
       showToast('Failed to update order status', 'error');
+    }
+  };
+
+  const saveTrackingNumber = async (orderId: string) => {
+    const trackingNumber = trackingInputs[orderId];
+    if (!trackingNumber) {
+      showToast('Please enter a tracking number', 'error');
+      return;
+    }
+
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { trackingNumber });
+      showToast('Tracking number saved', 'success');
+    } catch (error) {
+      console.error("Error saving tracking number:", error);
+      showToast('Failed to save tracking number', 'error');
     }
   };
 
@@ -195,6 +229,11 @@ export default function CourierPanel() {
 
   const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
 
+  const toggleSetting = (key: keyof typeof notificationSettings) => {
+    setNotificationSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} setting updated`, 'success');
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-20">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -204,6 +243,14 @@ export default function CourierPanel() {
         </h1>
         
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`p-2 rounded-xl transition-all ${showSettings ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            title="Notification Settings"
+          >
+            <Settings className="w-6 h-6" />
+          </button>
+
           <button
             onClick={optimizeRoute}
             disabled={isOptimizing}
@@ -232,6 +279,80 @@ export default function CourierPanel() {
         </div>
       </div>
 
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-white rounded-3xl border p-6 shadow-sm space-y-6">
+              <div className="flex items-center gap-3 border-b pb-4">
+                <Bell className="w-6 h-6 text-green-600" />
+                <h2 className="text-xl font-bold text-gray-800">Notification Settings</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Volume2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Sound Alerts</p>
+                      <p className="text-xs text-gray-500">Play sound for new orders</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('sound')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.sound ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.sound ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Smartphone className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Vibration</p>
+                      <p className="text-xs text-gray-500">Vibrate on new alerts</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('vibration')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.vibration ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.vibration ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Bell className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">New Orders</p>
+                      <p className="text-xs text-gray-500">Alert for incoming orders</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('newOrders')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.newOrders ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.newOrders ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {viewMode === 'map' ? (
         <div className="h-[600px] w-full rounded-3xl overflow-hidden border shadow-xl relative z-0">
           <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -249,43 +370,87 @@ export default function CourierPanel() {
               </Popup>
             </Marker>
 
-            {activeOrders.map(order => order.coords && (
-              <Marker key={order.id} position={order.coords}>
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-bold text-gray-400">#{order.id.slice(-6).toUpperCase()}</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
+            {activeOrders.map((order) => {
+              if (!order.coords) return null;
+              
+              // Find sequence index if route is active
+              const sequenceIndex = routeWaypoints.findIndex(wp => 
+                wp.lat === order.coords![0] && wp.lng === order.coords![1]
+              );
+
+              return (
+                <Marker 
+                  key={order.id} 
+                  position={order.coords}
+                  icon={sequenceIndex > 0 ? L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class="bg-green-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold border-2 border-white shadow-lg text-xs">${sequenceIndex}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                  }) : DefaultIcon}
+                >
+                  <Popup>
+                    <div className="p-2 min-w-[200px]">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          {sequenceIndex > 0 && (
+                            <span className="bg-green-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold">
+                              {sequenceIndex}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold text-gray-400">#{order.id.slice(-6).toUpperCase()}</span>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <p className="font-bold text-gray-900 mb-1">{order.customerName}</p>
+                      <p className="text-xs text-gray-600 mb-3 flex items-start gap-1">
+                        <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                        {order.customerAddress}
+                      </p>
+                      
+                      <div className="mb-3">
+                        <input
+                          type="text"
+                          placeholder="Tracking Number"
+                          className="w-full px-2 py-1 text-xs border rounded mb-1"
+                          value={trackingInputs[order.id] || order.trackingNumber || ''}
+                          onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
+                        />
+                        {(trackingInputs[order.id] && trackingInputs[order.id] !== order.trackingNumber) && (
+                          <button
+                            onClick={() => saveTrackingNumber(order.id)}
+                            className="w-full bg-gray-800 text-white py-1 rounded text-[10px] font-bold"
+                          >
+                            Save Tracking
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        {order.status === 'processing' && (
+                          <button
+                            onClick={() => updateOrderStatus(order.id, 'shipped')}
+                            className="w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-purple-700"
+                          >
+                            Ship
+                          </button>
+                        )}
+                        {order.status === 'shipped' && (
+                          <button
+                            onClick={() => updateOrderStatus(order.id, 'delivered')}
+                            className="w-full bg-green-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-green-700"
+                          >
+                            Deliver
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <p className="font-bold text-gray-900 mb-1">{order.customerName}</p>
-                    <p className="text-xs text-gray-600 mb-3 flex items-start gap-1">
-                      <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
-                      {order.customerAddress}
-                    </p>
-                    <div className="flex gap-2">
-                      {order.status === 'processing' && (
-                        <button
-                          onClick={() => updateOrderStatus(order.id, 'shipped')}
-                          className="w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-purple-700"
-                        >
-                          Ship
-                        </button>
-                      )}
-                      {order.status === 'shipped' && (
-                        <button
-                          onClick={() => updateOrderStatus(order.id, 'delivered')}
-                          className="w-full bg-green-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-green-700"
-                        >
-                          Deliver
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
           
           {routeWaypoints.length > 0 && (
@@ -356,9 +521,34 @@ export default function CourierPanel() {
                       <div className="bg-gray-100 p-2 rounded-xl">
                         <MapPin className="w-5 h-5 text-gray-600" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Address</p>
-                        <p className="text-gray-700 leading-relaxed">{order.customerAddress}</p>
+                        <p className="text-gray-700 leading-relaxed mb-4">{order.customerAddress}</p>
+                        
+                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tracking Information</p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Enter Tracking Number"
+                              className="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                              value={trackingInputs[order.id] || order.trackingNumber || ''}
+                              onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
+                            />
+                            {(trackingInputs[order.id] && trackingInputs[order.id] !== order.trackingNumber) && (
+                              <button
+                                onClick={() => saveTrackingNumber(order.id)}
+                                className="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-colors"
+                              >
+                                Save
+                              </button>
+                            )}
+                          </div>
+                          {order.trackingNumber && !trackingInputs[order.id] && (
+                            <p className="mt-2 text-[10px] text-green-600 font-bold">Current: {order.trackingNumber}</p>
+                          )}
+                        </div>
+
                         {order.coords && (
                           <button 
                             onClick={() => {
