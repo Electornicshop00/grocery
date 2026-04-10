@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { useProducts } from '../context/ProductContext';
 import { useOrders } from '../context/OrderContext';
+import { useSocket } from '../context/SocketContext';
 import { Navigate } from 'react-router-dom';
 import { 
   Plus, 
@@ -60,6 +61,7 @@ export default function Admin() {
   const { isAdmin, loading: authLoading } = useAuth();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { orders, updateOrderStatus, updateTrackingNumber, deleteOrder, deleteMultipleOrders, loading: ordersLoading } = useOrders();
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
@@ -97,26 +99,27 @@ export default function Admin() {
     image: ''
   });
 
-  const prevOrdersCount = useRef(orders.length);
-  const isInitialLoad = useRef(true);
-
-  // Real-time notification logic for new orders
+  // Real-time notification logic for new orders via Socket.io
   useEffect(() => {
-    if (ordersLoading) return;
+    if (!socket) return;
 
-    if (isInitialLoad.current) {
-      prevOrdersCount.current = orders.length;
-      isInitialLoad.current = false;
-      return;
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
 
-    if (orders.length > prevOrdersCount.current) {
-      const newOrdersCount = orders.length - prevOrdersCount.current;
-      const latestOrder = orders[0]; // Orders are sorted by createdAt desc in OrderContext
-
-      if (notificationSettings.newOrders && latestOrder) {
-        showToast(`🛍️ New Order Received from ${latestOrder.customerName}!`, 'success');
+    const handleNewOrder = (data: { customerName: string, total: number }) => {
+      if (notificationSettings.newOrders) {
+        showToast(`🛍️ New Order Received from ${data.customerName}! (₹${data.total.toFixed(2)})`, 'success');
         
+        // System notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('New Order Received', {
+            body: `Order from ${data.customerName} for ₹${data.total.toFixed(2)}`,
+            icon: 'https://picsum.photos/seed/grocery/192/192'
+          });
+        }
+
         if (notificationSettings.sound) {
           // Using a clear, professional notification sound
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -127,10 +130,14 @@ export default function Admin() {
           navigator.vibrate([200, 100, 200]);
         }
       }
-    }
-    
-    prevOrdersCount.current = orders.length;
-  }, [orders, ordersLoading, notificationSettings, showToast]);
+    };
+
+    socket.on('new-order', handleNewOrder);
+
+    return () => {
+      socket.off('new-order', handleNewOrder);
+    };
+  }, [socket, notificationSettings, showToast]);
 
   if (authLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!isAdmin) return <Navigate to="/" />;

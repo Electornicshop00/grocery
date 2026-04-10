@@ -122,10 +122,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, [user]);
 
+  // Cleanup unauthorized admin roles
   useEffect(() => {
-    const isHardcodedAdmin = user?.email?.toLowerCase() === "himangsusing37@gmail.com";
+    if (user && profile && profile.role === 'admin' && user.email?.toLowerCase() !== "himangsusing37@gmail.com") {
+      console.log(`AuthContext: Downgrading unauthorized admin ${user.email}`);
+      updateUserProfile({ role: 'customer' });
+    }
+  }, [user, profile]);
+
+  useEffect(() => {
+    const isAdminEmail = user?.email?.toLowerCase() === "himangsusing37@gmail.com";
     const isProfileAdmin = profile?.role === 'admin';
-    setIsAdmin(!!(isHardcodedAdmin || isProfileAdmin));
+    
+    // Strictly enforce that only the designated email can be an admin
+    // unless we explicitly want to allow database-driven admins for other emails
+    setIsAdmin(isAdminEmail || (isProfileAdmin && user?.email?.toLowerCase() === "himangsusing37@gmail.com"));
 
     const isHardcodedCourier = user?.email?.toLowerCase() === "courier@freshcart.com";
     const isProfileCourier = profile?.role === 'courier';

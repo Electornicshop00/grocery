@@ -18,6 +18,8 @@ import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import FooterBar from './components/FooterBar';
 
+import { SocketProvider } from './context/SocketContext';
+
 function ProtectedRoute({ children, adminOnly = false, courierOnly = false }: { children: React.ReactNode, adminOnly?: boolean, courierOnly?: boolean }) {
   const { user, isAdmin, isCourier, loading } = useAuth();
   const location = useLocation();
@@ -33,21 +35,23 @@ function ProtectedRoute({ children, adminOnly = false, courierOnly = false }: { 
 export default function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <ToastProvider>
-        <ProductProvider>
-          <CartProvider>
-            <OrderProvider>
-              <Router>
-                <LanguageProvider>
-                  <AppContent />
-                </LanguageProvider>
-              </Router>
-            </OrderProvider>
-          </CartProvider>
-        </ProductProvider>
-        </ToastProvider>
-      </ThemeProvider>
+      <SocketProvider>
+        <ThemeProvider>
+          <ToastProvider>
+          <ProductProvider>
+            <CartProvider>
+              <OrderProvider>
+                <Router>
+                  <LanguageProvider>
+                    <AppContent />
+                  </LanguageProvider>
+                </Router>
+              </OrderProvider>
+            </CartProvider>
+          </ProductProvider>
+          </ToastProvider>
+        </ThemeProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

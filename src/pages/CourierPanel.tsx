@@ -175,10 +175,28 @@ export default function CourierPanel() {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          showToast('Failed to track location. Please enable GPS.', 'error');
+          let message = 'Failed to track location.';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Location permission denied. Please enable GPS and allow access.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              message = 'Location request timed out.';
+              break;
+          }
+          
+          showToast(`${message} Please check your settings.`, 'error');
           setIsTrackingLocation(false);
         },
-        { enableHighAccuracy: true }
+        { 
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
       );
     } else {
       setIsTrackingLocation(false);

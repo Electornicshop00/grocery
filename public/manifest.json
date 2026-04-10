@@ -1,0 +1,21 @@
+{
+  "name": "Grocery App",
+  "short_name": "GroceryApp",
+  "description": "Your favorite grocery delivery app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/grocery/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/grocery/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

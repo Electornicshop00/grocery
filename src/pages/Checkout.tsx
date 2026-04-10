@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useSocket } from '../context/SocketContext';
 import { ShoppingBag, MapPin, Phone, User, MapPinIcon, ChevronRight, ChevronLeft, CheckCircle2, Loader2, CreditCard, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,6 +17,7 @@ export default function Checkout() {
   const { placeOrder } = useOrders();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const { socket } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -71,8 +73,27 @@ export default function Checkout() {
       },
       (error) => {
         console.error("Error getting location:", error);
-        showToast('Could not get your location. Please enter it manually.', 'error');
+        let message = 'Could not get your location.';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Location permission denied. Please enable it in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = 'Location information is unavailable. Please check your GPS/Network.';
+            break;
+          case error.TIMEOUT:
+            message = 'Location request timed out. Please try again.';
+            break;
+        }
+        
+        showToast(`${message} Please enter it manually.`, 'error');
         setIsLocating(false);
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   };
@@ -145,6 +166,14 @@ export default function Checkout() {
         address: formData.address,
         coords: formData.coords || undefined
       }, paymentMethod);
+      
+      // Emit socket event for real-time notification
+      if (socket) {
+        socket.emit('new-order', {
+          customerName: fullName,
+          total: total
+        });
+      }
       
       setStep('success');
       clearCart();
