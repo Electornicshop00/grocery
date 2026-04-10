@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Product, Order } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,7 +34,26 @@ import {
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../lib/firebase';
+import { storage, db } from '../lib/firebase';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { doc, updateDoc } from 'firebase/firestore';
+
+// Fix Leaflet icon issue
+const courierIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #2563eb; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
+
+const customerIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #dc2626; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
 
 export default function Admin() {
   const { showToast } = useToast();
@@ -57,6 +76,7 @@ export default function Admin() {
     onConfirm: () => {},
   });
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [showCourierMap, setShowCourierMap] = useState(false);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -67,6 +87,7 @@ export default function Admin() {
     vibration: true,
     newOrders: true
   });
+  const [sessionStartTime] = useState(new Date());
   const [productForm, setProductForm] = useState({
     name: '',
     price: 0,
@@ -75,6 +96,41 @@ export default function Admin() {
     description: '',
     image: ''
   });
+
+  const prevOrdersCount = useRef(orders.length);
+  const isInitialLoad = useRef(true);
+
+  // Real-time notification logic for new orders
+  useEffect(() => {
+    if (ordersLoading) return;
+
+    if (isInitialLoad.current) {
+      prevOrdersCount.current = orders.length;
+      isInitialLoad.current = false;
+      return;
+    }
+
+    if (orders.length > prevOrdersCount.current) {
+      const newOrdersCount = orders.length - prevOrdersCount.current;
+      const latestOrder = orders[0]; // Orders are sorted by createdAt desc in OrderContext
+
+      if (notificationSettings.newOrders && latestOrder) {
+        showToast(`🛍️ New Order Received from ${latestOrder.customerName}!`, 'success');
+        
+        if (notificationSettings.sound) {
+          // Using a clear, professional notification sound
+          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+          audio.play().catch(e => console.warn("Audio playback failed (browser policy):", e));
+        }
+
+        if (notificationSettings.vibration && 'vibrate' in navigator) {
+          navigator.vibrate([200, 100, 200]);
+        }
+      }
+    }
+    
+    prevOrdersCount.current = orders.length;
+  }, [orders, ordersLoading, notificationSettings, showToast]);
 
   if (authLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!isAdmin) return <Navigate to="/" />;
@@ -402,6 +458,90 @@ export default function Admin() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Courier Tracking Map Section */}
+      <div className="bg-white rounded-3xl border shadow-sm overflow-hidden">
+        <div 
+          className="p-6 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setShowCourierMap(!showCourierMap)}
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+              <Truck className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Live Courier Tracking</h2>
+              <p className="text-sm text-gray-500">Monitor active deliveries in real-time</p>
+            </div>
+          </div>
+          <div className={`p-2 rounded-full bg-gray-100 text-gray-400 transition-transform duration-300 ${showCourierMap ? 'rotate-180' : ''}`}>
+            <ChevronDown className="w-5 h-5" />
+          </div>
+        </div>
+        
+        <AnimatePresence>
+          {showCourierMap && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="border-t"
+            >
+              <div className="h-[500px] w-full z-0">
+                <MapContainer 
+                  center={[22.5726, 88.3639]} 
+                  zoom={12} 
+                  style={{ height: '100%', width: '100%' }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  {orders.filter(o => o.status === 'shipped' && o.courierCoords).map(order => (
+                    <Marker 
+                      key={`courier-${order.id}`} 
+                      position={[order.courierCoords!.lat, order.courierCoords!.lng]} 
+                      icon={courierIcon}
+                    >
+                      <Popup>
+                        <div className="space-y-1">
+                          <p className="font-bold text-blue-600">Courier (Order #{order.id.slice(-6).toUpperCase()})</p>
+                          <p className="text-xs">Delivering to: <span className="font-medium">{order.customerName}</span></p>
+                          <p className="text-[10px] text-gray-500">{order.customerAddress}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                  {orders.filter(o => o.status === 'shipped' && o.customerCoords).map(order => (
+                    <Marker 
+                      key={`customer-${order.id}`} 
+                      position={[order.customerCoords!.lat, order.customerCoords!.lng]} 
+                      icon={customerIcon}
+                    >
+                      <Popup>
+                        <div className="space-y-1">
+                          <p className="font-bold text-red-600">Customer: {order.customerName}</p>
+                          <p className="text-xs">Order #{order.id.slice(-6).toUpperCase()}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+              <div className="p-4 bg-gray-50 flex items-center justify-between text-xs text-gray-500">
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow-sm"></div>
+                    <span>Active Courier</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-600 border-2 border-white shadow-sm"></div>
+                    <span>Delivery Location</span>
+                  </div>
+                </div>
+                <p className="italic">Showing all active 'Shipped' orders with live tracking enabled.</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Low Stock Alert Banner */}
@@ -772,6 +912,11 @@ export default function Admin() {
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}>
                             {order.status}
                           </span>
+                          {new Date(order.createdAt) > sessionStartTime && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-600 text-white animate-pulse">
+                              NEW
+                            </span>
+                          )}
                         </div>
                         <p className="text-lg font-bold text-gray-800">{order.customerName}</p>
                       </div>

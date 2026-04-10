@@ -8,10 +8,12 @@ import {
   updateProfile,
   sendEmailVerification,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, User, LogIn, UserPlus, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, LogIn, UserPlus, CheckCircle, Eye, EyeOff, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Auth() {
   const { showToast } = useToast();
@@ -25,6 +27,8 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -110,6 +114,26 @@ export default function Auth() {
       }
     } catch (err: any) {
       setError(err.message);
+      showToast(err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      showToast('Please enter your email address', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      showToast('Password reset link sent to your email', 'success');
+      setShowResetModal(false);
+      setResetEmail('');
+    } catch (err: any) {
       showToast(err.message, 'error');
     } finally {
       setLoading(false);
@@ -212,6 +236,21 @@ export default function Auth() {
             </button>
           </div>
 
+          {isLogin && (
+            <div className="flex justify-end">
+              <button 
+                type="button"
+                onClick={() => {
+                  setResetEmail(email);
+                  setShowResetModal(true);
+                }}
+                className="text-sm font-bold text-gray-900 hover:underline"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
           <button 
             type="submit"
             disabled={loading}
@@ -231,6 +270,68 @@ export default function Auth() {
           </button>
         </p>
       </div>
+
+      <AnimatePresence>
+        {showResetModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border relative"
+            >
+              <button 
+                onClick={() => setShowResetModal(false)}
+                className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-gray-100 rounded-2xl">
+                  <Lock className="w-8 h-8 text-gray-900" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">Reset Password</h3>
+              </div>
+              
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+              
+              <form onSubmit={handleResetPassword} className="space-y-6">
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input 
+                    required
+                    type="email" 
+                    placeholder="Email Address"
+                    className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-gray-900 outline-none"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <button 
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold bg-gray-900 text-white hover:bg-black transition-colors shadow-lg shadow-gray-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Sending...' : 'Send Link'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

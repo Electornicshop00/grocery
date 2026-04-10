@@ -4,7 +4,7 @@ import { collection, query, onSnapshot, doc, updateDoc, orderBy } from 'firebase
 import { Order } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Map as MapIcon, List, Navigation, Settings, Bell, Volume2, Smartphone } from 'lucide-react';
+import { Package, Truck, CheckCircle, Clock, MapPin, Phone, User, Map as MapIcon, List, Navigation, Settings, Bell, Volume2, Smartphone, Crosshair, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -78,15 +78,23 @@ export default function CourierPanel() {
   const [orders, setOrders] = useState<OrderWithCoords[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const ordersRef = useRef<OrderWithCoords[]>([]);
+
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
   const [mapCenter, setMapCenter] = useState<[number, number]>([22.5726, 88.3639]); // Default to Kolkata
   const [routeWaypoints, setRouteWaypoints] = useState<L.LatLng[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({});
   const [showSettings, setShowSettings] = useState(false);
+  const [courierLocation, setCourierLocation] = useState<[number, number] | null>(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     sound: true,
     vibration: true,
-    newOrders: true
+    newOrders: true,
+    liveTracking: false
   });
   const { showToast } = useToast();
   const { t } = useLanguage();
@@ -94,13 +102,25 @@ export default function CourierPanel() {
   const SHOP_LOCATION: [number, number] = [22.5726, 88.3639];
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OrderWithCoords));
       
-      // Geocode addresses for active orders
+      // Sort by date descending
+      ordersData.sort((a, b) => {
+        const dateA = a.createdAt ? (a.createdAt as any).seconds || new Date(a.createdAt as any).getTime() : 0;
+        const dateB = b.createdAt ? (b.createdAt as any).seconds || new Date(b.createdAt as any).getTime() : 0;
+        return dateB - dateA;
+      });
+      
+      // Geocode addresses for active orders if coords not already present
       const ordersWithCoords = await Promise.all(ordersData.map(async (order) => {
         if (order.status === 'delivered' || order.status === 'cancelled') return order;
+        
+        // Use customerCoords if available from checkout
+        if (order.customerCoords) {
+          return { ...order, coords: [order.customerCoords.lat, order.customerCoords.lng] as [number, number] };
+        }
         
         try {
           const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(order.customerAddress)}&limit=1`);
@@ -130,6 +150,44 @@ export default function CourierPanel() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let watchId: number;
+    if (notificationSettings.liveTracking && navigator.geolocation) {
+      setIsTrackingLocation(true);
+      watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setCourierLocation(newLocation);
+
+          // Update active orders with courier's current location in Firestore
+          const activeShippedOrders = ordersRef.current.filter(o => o.status === 'shipped');
+          for (const order of activeShippedOrders) {
+            try {
+              const orderRef = doc(db, 'orders', order.id);
+              await updateDoc(orderRef, {
+                courierCoords: { lat: newLocation[0], lng: newLocation[1] }
+              });
+            } catch (err) {
+              console.error("Error updating courier location in Firestore:", err);
+            }
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          showToast('Failed to track location. Please enable GPS.', 'error');
+          setIsTrackingLocation(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setIsTrackingLocation(false);
+      setCourierLocation(null);
+    }
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    };
+  }, [notificationSettings.liveTracking]);
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
@@ -234,46 +292,74 @@ export default function CourierPanel() {
     showToast(`${key.charAt(0).toUpperCase() + key.slice(1)} setting updated`, 'success');
   };
 
+  const openInExternalMap = (address: string) => {
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+    window.open(url, '_blank');
+  };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c; // Distance in km
+    return d.toFixed(1);
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-20">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-          <Truck className="w-8 h-8 text-gray-900" />
-          Curries Panel (Delivery)
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
+          <Truck className="w-6 h-6 md:w-8 md:h-8 text-gray-900" />
+          Courier Panel
         </h1>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          <button
+            onClick={() => toggleSetting('liveTracking')}
+            className={`flex-1 lg:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs md:text-sm font-bold transition-all shadow-sm border ${notificationSettings.liveTracking ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+            title="Toggle Live Tracking"
+          >
+            <Crosshair className={`w-4 h-4 ${notificationSettings.liveTracking ? 'animate-pulse' : ''}`} />
+            <span className="whitespace-nowrap">{notificationSettings.liveTracking ? 'Tracking On' : 'Track Me'}</span>
+          </button>
+
           <button
             onClick={() => setShowSettings(!showSettings)}
             className={`p-2 rounded-xl transition-all ${showSettings ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             title="Notification Settings"
           >
-            <Settings className="w-6 h-6" />
+            <Settings className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
           <button
             onClick={optimizeRoute}
             disabled={isOptimizing}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-100 disabled:opacity-50"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-green-600 text-white px-3 py-2 rounded-xl text-xs md:text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-100 disabled:opacity-50"
           >
             <Navigation className={`w-4 h-4 ${isOptimizing ? 'animate-pulse' : ''}`} />
-            {isOptimizing ? 'Optimizing...' : 'Optimize Route'}
+            <span className="whitespace-nowrap">{isOptimizing ? 'Optimizing...' : 'Optimize'}</span>
           </button>
 
-          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-2xl">
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl w-full sm:w-auto">
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <List className="w-4 h-4" />
-              List View
+              List
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs md:text-sm font-bold transition-all ${viewMode === 'map' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <MapIcon className="w-4 h-4" />
-              Map View
+              Map
             </button>
           </div>
         </div>
@@ -293,7 +379,7 @@ export default function CourierPanel() {
                 <h2 className="text-xl font-bold text-gray-800">Notification Settings</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-white rounded-xl shadow-sm">
@@ -347,6 +433,24 @@ export default function CourierPanel() {
                     <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.newOrders ? 'right-1' : 'left-1'}`} />
                   </button>
                 </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-xl shadow-sm">
+                      <Crosshair className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Live Tracking</p>
+                      <p className="text-xs text-gray-500">Track your current location</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSetting('liveTracking')}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${notificationSettings.liveTracking ? 'bg-green-600' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationSettings.liveTracking ? 'right-1' : 'left-1'}`} />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -354,7 +458,7 @@ export default function CourierPanel() {
       </AnimatePresence>
 
       {viewMode === 'map' ? (
-        <div className="h-[600px] w-full rounded-3xl overflow-hidden border shadow-xl relative z-0">
+        <div className="h-[400px] md:h-[600px] w-full rounded-3xl overflow-hidden border shadow-xl relative z-0">
           <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
             <ChangeView center={mapCenter} />
             <TileLayer
@@ -369,6 +473,23 @@ export default function CourierPanel() {
                 <div className="p-1 font-bold">FreshCart Shop (Start)</div>
               </Popup>
             </Marker>
+
+            {/* Courier Live Location Marker */}
+            {courierLocation && (
+              <Marker 
+                position={courierLocation}
+                icon={L.divIcon({
+                  className: 'custom-div-icon',
+                  html: `<div class="bg-blue-600 w-6 h-6 rounded-full border-4 border-white shadow-xl animate-pulse"></div>`,
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12]
+                })}
+              >
+                <Popup>
+                  <div className="p-1 font-bold">Your Current Location</div>
+                </Popup>
+              </Marker>
+            )}
 
             {activeOrders.map((order) => {
               if (!order.coords) return null;
@@ -405,10 +526,17 @@ export default function CourierPanel() {
                         </span>
                       </div>
                       <p className="font-bold text-gray-900 mb-1">{order.customerName}</p>
-                      <p className="text-xs text-gray-600 mb-3 flex items-start gap-1">
+                      <p className="text-xs text-gray-600 mb-1 flex items-start gap-1">
                         <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
                         {order.customerAddress}
                       </p>
+                      
+                      {courierLocation && order.coords && (
+                        <p className="text-[10px] text-blue-600 font-bold mb-3 flex items-center gap-1">
+                          <Navigation className="w-3 h-3" />
+                          {calculateDistance(courierLocation[0], courierLocation[1], order.coords[0], order.coords[1])} km away from you
+                        </p>
+                      )}
                       
                       <div className="mb-3">
                         <input
@@ -428,23 +556,33 @@ export default function CourierPanel() {
                         )}
                       </div>
 
-                      <div className="flex gap-2">
-                        {order.status === 'processing' && (
-                          <button
-                            onClick={() => updateOrderStatus(order.id, 'shipped')}
-                            className="w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-purple-700"
-                          >
-                            Ship
-                          </button>
-                        )}
-                        {order.status === 'shipped' && (
-                          <button
-                            onClick={() => updateOrderStatus(order.id, 'delivered')}
-                            className="w-full bg-green-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-green-700"
-                          >
-                            Deliver
-                          </button>
-                        )}
+                      <div className="flex flex-col gap-2">
+                        <button 
+                          onClick={() => openInExternalMap(order.customerAddress)}
+                          className="w-full bg-blue-50 text-blue-600 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 flex items-center justify-center gap-1 border border-blue-100"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Open in Google Maps
+                        </button>
+
+                        <div className="flex gap-2">
+                          {order.status === 'processing' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'shipped')}
+                              className="w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-purple-700"
+                            >
+                              Ship
+                            </button>
+                          )}
+                          {order.status === 'shipped' && (
+                            <button
+                              onClick={() => updateOrderStatus(order.id, 'delivered')}
+                              className="w-full bg-green-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-green-700"
+                            >
+                              Deliver
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Popup>
@@ -453,14 +591,26 @@ export default function CourierPanel() {
             })}
           </MapContainer>
           
-          {routeWaypoints.length > 0 && (
-            <button 
-              onClick={() => setRouteWaypoints([])}
-              className="absolute bottom-6 right-6 z-[1000] bg-white text-red-600 px-4 py-2 rounded-xl font-bold shadow-lg border border-red-100 hover:bg-red-50 transition-colors"
-            >
-              Clear Route
-            </button>
-          )}
+          <div className="absolute bottom-6 right-6 z-[1000] flex flex-col gap-2">
+            {courierLocation && (
+              <button 
+                onClick={() => setMapCenter(courierLocation)}
+                className="bg-white text-blue-600 p-3 rounded-xl font-bold shadow-lg border border-blue-100 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                title="Center on My Location"
+              >
+                <Crosshair className="w-5 h-5" />
+                <span className="text-sm">My Location</span>
+              </button>
+            )}
+            {routeWaypoints.length > 0 && (
+              <button 
+                onClick={() => setRouteWaypoints([])}
+                className="bg-white text-red-600 px-4 py-2 rounded-xl font-bold shadow-lg border border-red-100 hover:bg-red-50 transition-colors"
+              >
+                Clear Route
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -474,125 +624,138 @@ export default function CourierPanel() {
                 key={order.id}
                 className="bg-white rounded-3xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow"
               >
-                <div className="p-6 md:p-8">
-                  <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+                <div className="p-4 md:p-8">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
-                        <span className="text-sm font-mono font-bold text-gray-800">#{order.id.slice(-8).toUpperCase()}</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</span>
+                        <span className="text-xs md:text-sm font-mono font-bold text-gray-800">#{order.id.slice(-8).toUpperCase()}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-500 text-sm">
-                        <Clock className="w-4 h-4" />
+                      <div className="flex items-center gap-2 text-gray-500 text-[10px] md:text-sm">
+                        <Clock className="w-3 h-3 md:w-4 md:h-4" />
                         {new Date(order.createdAt).toLocaleString()}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
+                    <div className="flex items-center justify-between sm:justify-end gap-3">
+                      <span className={`px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider ${getStatusColor(order.status)}`}>
                         {order.status}
                       </span>
-                      <span className="bg-gray-900 text-white px-4 py-1.5 rounded-full text-xs font-bold">
+                      <span className="bg-gray-900 text-white px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold">
                         ₹{order.total.toFixed(2)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
                     <div className="space-y-4">
                       <div className="flex items-start gap-3">
                         <div className="bg-gray-100 p-2 rounded-xl">
-                          <User className="w-5 h-5 text-gray-600" />
+                          <User className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Customer</p>
-                          <p className="font-bold text-gray-800">{order.customerName}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Customer</p>
+                          <p className="text-sm md:text-base font-bold text-gray-800">{order.customerName}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="bg-gray-100 p-2 rounded-xl">
-                          <Phone className="w-5 h-5 text-gray-600" />
+                          <Phone className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone</p>
-                          <p className="font-bold text-gray-800">{order.customerPhone}</p>
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Phone</p>
+                          <p className="text-sm md:text-base font-bold text-gray-800">{order.customerPhone}</p>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="bg-gray-100 p-2 rounded-xl">
-                        <MapPin className="w-5 h-5 text-gray-600" />
+                        <MapPin className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Address</p>
-                        <p className="text-gray-700 leading-relaxed mb-4">{order.customerAddress}</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Address</p>
+                        <p className="text-xs md:text-sm text-gray-700 leading-relaxed mb-1">{order.customerAddress}</p>
                         
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tracking Information</p>
+                        {courierLocation && order.coords && (
+                          <p className="text-[10px] text-blue-600 font-bold mb-4 flex items-center gap-1">
+                            <Navigation className="w-3 h-3" />
+                            {calculateDistance(courierLocation[0], courierLocation[1], order.coords[0], order.coords[1])} km away
+                          </p>
+                        )}
+                        
+                        <div className="bg-gray-50 p-3 md:p-4 rounded-2xl border border-gray-100">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Tracking Info</p>
                           <div className="flex gap-2">
                             <input
                               type="text"
-                              placeholder="Enter Tracking Number"
-                              className="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                              placeholder="Tracking #"
+                              className="flex-1 px-3 py-2 text-xs border rounded-xl focus:ring-2 focus:ring-green-500 outline-none bg-white"
                               value={trackingInputs[order.id] || order.trackingNumber || ''}
                               onChange={(e) => setTrackingInputs(prev => ({ ...prev, [order.id]: e.target.value }))}
                             />
                             {(trackingInputs[order.id] && trackingInputs[order.id] !== order.trackingNumber) && (
                               <button
                                 onClick={() => saveTrackingNumber(order.id)}
-                                className="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-black transition-colors"
+                                className="bg-gray-900 text-white px-3 py-2 rounded-xl text-[10px] font-bold hover:bg-black transition-colors"
                               >
                                 Save
                               </button>
                             )}
                           </div>
-                          {order.trackingNumber && !trackingInputs[order.id] && (
-                            <p className="mt-2 text-[10px] text-green-600 font-bold">Current: {order.trackingNumber}</p>
-                          )}
                         </div>
 
                         {order.coords && (
-                          <button 
-                            onClick={() => {
-                              setMapCenter(order.coords!);
-                              setViewMode('map');
-                            }}
-                            className="mt-2 text-xs font-bold text-gray-900 flex items-center gap-1 hover:underline"
-                          >
-                            <MapIcon className="w-3 h-3" />
-                            View on Map
-                          </button>
+                          <div className="flex flex-wrap gap-3 mt-3">
+                            <button 
+                              onClick={() => {
+                                setMapCenter(order.coords!);
+                                setViewMode('map');
+                              }}
+                              className="text-[10px] font-bold text-gray-900 flex items-center gap-1 hover:underline"
+                            >
+                              <MapIcon className="w-3 h-3" />
+                              View on Map
+                            </button>
+                            <button 
+                              onClick={() => openInExternalMap(order.customerAddress)}
+                              className="text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:underline"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Google Maps
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t pt-6 flex flex-wrap gap-3">
+                  <div className="border-t pt-6 flex flex-col sm:flex-row gap-3">
                     {order.status === 'processing' && (
                       <button
                         onClick={() => updateOrderStatus(order.id, 'shipped')}
-                        className="flex-grow md:flex-grow-0 bg-purple-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto bg-purple-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm"
                       >
-                        <Truck className="w-5 h-5" />
+                        <Truck className="w-4 h-4 md:w-5 md:h-5" />
                         Mark as Shipped
                       </button>
                     )}
                     {order.status === 'shipped' && (
                       <button
                         onClick={() => updateOrderStatus(order.id, 'delivered')}
-                        className="flex-grow md:flex-grow-0 bg-green-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto bg-green-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
                       >
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
                         Mark as Delivered
                       </button>
                     )}
                     {order.status === 'pending' && (
-                      <div className="text-yellow-600 font-bold flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-xl border border-yellow-100">
-                        <Clock className="w-5 h-5" />
-                        Waiting for Admin to Process
+                      <div className="w-full sm:w-auto text-yellow-600 font-bold flex items-center justify-center gap-2 bg-yellow-50 px-4 py-3 rounded-xl border border-yellow-100 text-xs md:text-sm">
+                        <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                        Waiting for Admin
                       </div>
                     )}
                     {order.status === 'delivered' && (
-                      <div className="text-green-600 font-bold flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
-                        <CheckCircle className="w-5 h-5" />
+                      <div className="w-full sm:w-auto text-green-600 font-bold flex items-center justify-center gap-2 bg-green-50 px-4 py-3 rounded-xl border border-green-100 text-xs md:text-sm">
+                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
                         Order Delivered
                       </div>
                     )}

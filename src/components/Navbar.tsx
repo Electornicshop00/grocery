@@ -41,19 +41,28 @@ export default function Navbar() {
           />
         </Link>
 
-        <div className="flex items-center gap-3 md:gap-6">
+        <div className="flex items-center gap-2 md:gap-6">
           {!isCourier && (
             <>
-              <div className="flex items-center gap-1 md:gap-2">
+              <Link to="/cart" className="relative text-white/90 hover:text-white p-1.5 md:p-2 rounded-full hover:bg-white/10 transition-colors">
+                <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-[8px] md:text-[10px] font-bold rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center border-2 border-green-900">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+
+              <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setLanguage('en')}
-                  className={`text-[10px] md:text-sm font-bold transition-colors px-1.5 md:px-2 py-1 rounded ${language === 'en' ? 'bg-white text-green-900' : 'text-white/50 hover:text-white'}`}
+                  className={`text-[10px] md:text-sm font-bold transition-colors px-1.5 py-0.5 md:px-2 md:py-1 rounded ${language === 'en' ? 'bg-white text-green-900' : 'text-white/50 hover:text-white'}`}
                 >
                   EN
                 </button>
                 <button 
                   onClick={() => setLanguage('bn')}
-                  className={`text-[10px] md:text-sm font-bold transition-colors px-1.5 md:px-2 py-1 rounded ${language === 'bn' ? 'bg-white text-green-900' : 'text-white/50 hover:text-white'}`}
+                  className={`text-[10px] md:text-sm font-bold transition-colors px-1.5 py-0.5 md:px-2 md:py-1 rounded ${language === 'bn' ? 'bg-white text-green-900' : 'text-white/50 hover:text-white'}`}
                 >
                   BN
                 </button>
@@ -61,23 +70,21 @@ export default function Navbar() {
 
               <button 
                 onClick={toggleTheme}
-                className="text-white/90 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+                className="text-white/90 hover:text-white p-1.5 md:p-2 rounded-full hover:bg-white/10 transition-colors"
                 title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
               >
-                {theme === 'light' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+                {theme === 'light' ? <Moon className="w-5 h-5 md:w-6 md:h-6" /> : <Sun className="w-5 h-5 md:w-6 md:h-6" />}
               </button>
             </>
           )}
 
           {user ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               {isAdmin && (
-                <>
-                  <Link to="/admin" className="text-white/90 hover:text-white flex items-center gap-1">
-                    <LayoutDashboard className="w-5 h-5" />
-                    <span className="hidden md:inline font-bold">{t('admin')}</span>
-                  </Link>
-                </>
+                <Link to="/admin" className="text-white/90 hover:text-white flex items-center gap-1">
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span className="hidden md:inline font-bold">{t('admin')}</span>
+                </Link>
               )}
               {isCourier && (
                 <Link to="/courier" className="text-white/90 hover:text-white flex items-center gap-1">
@@ -87,7 +94,7 @@ export default function Navbar() {
               )}
               <button 
                 onClick={handleLogout}
-                className="text-white/80 hover:text-red-400 p-1 ml-2"
+                className="text-white/80 hover:text-red-400 p-1"
                 title={t('logout')}
               >
                 <LogOut className="w-5 h-5" />
@@ -96,9 +103,9 @@ export default function Navbar() {
           ) : (
             <Link 
               to="/auth" 
-              className="bg-white text-green-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors font-bold"
+              className="bg-white text-green-900 px-3 py-1.5 md:px-4 md:py-2 rounded-lg hover:bg-gray-100 transition-colors font-bold text-xs md:text-sm"
             >
-              {t('loginRegister')}
+              {t('loginRegister').split('/')[0]}
             </Link>
           )}
         </div>

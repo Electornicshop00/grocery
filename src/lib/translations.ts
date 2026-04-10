@@ -62,13 +62,13 @@ export const translations = {
     payAtDelivery: 'Pay at delivery',
     payOnline: 'Pay securely via UPI',
     scanToPay: 'Scan QR code to pay',
-    payWithUpiApp: 'Pay with any UPI App',
     directCommunication: 'Direct communication',
     login: 'Login',
     signup: 'Sign Up',
     orders: 'Orders',
     noOrders: 'No orders yet',
     profile: 'Profile',
+    buyNow: 'Buy Now',
   },
   bn: {
     shop: 'দোকান',
@@ -131,12 +131,12 @@ export const translations = {
     payAtDelivery: 'ডেলিভারির সময় পেমেন্ট করুন',
     payOnline: 'UPI এর মাধ্যমে নিরাপদ পেমেন্ট',
     scanToPay: 'পেমেন্ট করতে QR কোড স্ক্যান করুন',
-    payWithUpiApp: 'যেকোনো UPI অ্যাপ দিয়ে পেমেন্ট করুন',
     directCommunication: 'সরাসরি যোগাযোগ',
     login: 'লগইন',
     signup: 'নিবন্ধন করুন',
     orders: 'অর্ডার',
     noOrders: 'এখনও কোনো অর্ডার নেই',
     profile: 'প্রোফাইল',
+    buyNow: 'এখনই কিনুন',
   }
 };

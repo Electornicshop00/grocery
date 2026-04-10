@@ -70,7 +70,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 interface OrderContextType {
   orders: Order[];
   userOrders: Order[];
-  placeOrder: (items: CartItem[], total: number, customerDetails: { name: string; phone: string; address: string }, paymentMethod: Order['paymentMethod']) => Promise<void>;
+  placeOrder: (items: CartItem[], total: number, customerDetails: { name: string; phone: string; address: string; coords?: { lat: number; lng: number } }, paymentMethod: Order['paymentMethod']) => Promise<void>;
   updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>;
   updateTrackingNumber: (orderId: string, trackingNumber: string) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
@@ -89,21 +89,25 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Fetch all orders for admin
   useEffect(() => {
     if (!user || !isAdmin) {
+      if (user) console.log(`OrderContext: User ${user.email} is not admin, skipping broad fetch.`);
       setOrders([]);
       return;
     }
 
-    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    console.log(`OrderContext: User ${user.email} is admin, starting broad fetch.`);
+    const q = query(collection(db, 'orders'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp).toDate().toISOString()
       })) as Order[];
+      // Sort by date descending
+      ordersData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setOrders(ordersData);
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'orders');
+      handleFirestoreError(error, OperationType.GET, 'orders_all');
       setLoading(false);
     });
 
@@ -120,8 +124,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const q = query(
       collection(db, 'orders'), 
-      where('userId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.uid)
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -130,10 +133,12 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...doc.data(),
         createdAt: (doc.data().createdAt as Timestamp).toDate().toISOString()
       })) as Order[];
+      // Sort by date descending
+      ordersData.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setUserOrders(ordersData);
       setLoading(false);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'orders');
+      handleFirestoreError(error, OperationType.GET, 'orders_user');
       setLoading(false);
     });
 
@@ -143,7 +148,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const placeOrder = async (
     items: CartItem[], 
     total: number, 
-    customerDetails: { name: string; phone: string; address: string },
+    customerDetails: { name: string; phone: string; address: string; coords?: { lat: number; lng: number } },
     paymentMethod: Order['paymentMethod']
   ) => {
     if (!user) throw new Error('Must be logged in to place an order');
@@ -158,6 +163,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       customerName: customerDetails.name,
       customerPhone: customerDetails.phone,
       customerAddress: customerDetails.address,
+      customerCoords: customerDetails.coords || null,
       paymentMethod
     };
 

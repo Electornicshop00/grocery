@@ -12,6 +12,7 @@ import Cart from './pages/Cart';
 import Admin from './pages/Admin';
 import CourierPanel from './pages/CourierPanel';
 import Auth from './pages/Auth';
+import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
@@ -22,9 +23,9 @@ function ProtectedRoute({ children, adminOnly = false, courierOnly = false }: { 
   const location = useLocation();
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  if (!user) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/auth" state={{ from: location }} replace />;
   if (adminOnly && !isAdmin) return <Navigate to="/shop" replace />;
-  if (courierOnly && !isCourier) return <Navigate to="/shop" replace />;
+  if (courierOnly && !isCourier && !isAdmin) return <Navigate to="/shop" replace />;
 
   return <>{children}</>;
 }
@@ -68,7 +69,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/shop" element={isCourier ? <Navigate to="/courier" replace /> : <Home />} />
-          <Route path="/cart" element={isCourier ? <Navigate to="/courier" replace /> : <ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/cart" element={isCourier ? <Navigate to="/courier" replace /> : <Cart />} />
+          <Route path="/checkout" element={isCourier ? <Navigate to="/courier" replace /> : <ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={isCourier ? <Navigate to="/courier" replace /> : <ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route 

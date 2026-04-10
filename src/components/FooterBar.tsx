@@ -11,8 +11,6 @@ export default function FooterBar() {
   
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  if (!user) return null;
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div 

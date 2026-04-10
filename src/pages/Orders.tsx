@@ -21,12 +21,31 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Order } from '../types';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet icon issue
+const courierIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #2563eb; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
+
+const customerIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #dc2626; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
 
 export default function Orders() {
   const { userOrders, loading } = useOrders();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [showTrackingMap, setShowTrackingMap] = useState<string | null>(null);
 
   const getStatusStyles = (status: Order['status']) => {
     switch (status) {
@@ -255,23 +274,74 @@ export default function Orders() {
                               <Truck className="w-4 h-4" />
                               Shipping Information
                             </h4>
-                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
-                              <div>
-                                <p className="text-xs font-bold text-indigo-500 uppercase mb-1">Tracking Number</p>
-                                <p className="font-mono font-bold text-indigo-900">{order.trackingNumber}</p>
+                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="text-xs font-bold text-indigo-500 uppercase mb-1">Tracking Number</p>
+                                  <p className="font-mono font-bold text-indigo-900">{order.trackingNumber}</p>
+                                </div>
+                                <a 
+                                  href={getTrackingLink(order.trackingNumber)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-white text-indigo-600 p-2 rounded-lg shadow-sm border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 text-sm font-bold"
+                                >
+                                  Track Package
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
                               </div>
-                              <a 
-                                href={getTrackingLink(order.trackingNumber)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-white text-indigo-600 p-2 rounded-lg shadow-sm border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 text-sm font-bold"
-                              >
-                                Track Package
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
+                              
+                              {order.status === 'shipped' && order.courierCoords && (
+                                <button
+                                  onClick={() => setShowTrackingMap(showTrackingMap === order.id ? null : order.id)}
+                                  className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
+                                >
+                                  <MapPin className="w-4 h-4" />
+                                  {showTrackingMap === order.id ? 'Hide Live Map' : 'View Live Delivery Map'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
+
+                        <AnimatePresence>
+                          {showTrackingMap === order.id && order.courierCoords && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="h-[300px] w-full rounded-xl overflow-hidden border mt-4 z-0">
+                                <MapContainer 
+                                  center={[order.courierCoords.lat, order.courierCoords.lng]} 
+                                  zoom={15} 
+                                  style={{ height: '100%', width: '100%' }}
+                                >
+                                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                  <Marker position={[order.courierCoords.lat, order.courierCoords.lng]} icon={courierIcon}>
+                                    <Popup>
+                                      <div className="text-center">
+                                        <p className="font-bold">Courier is here</p>
+                                        <p className="text-xs text-gray-500">Out for delivery</p>
+                                      </div>
+                                    </Popup>
+                                  </Marker>
+                                  {order.customerCoords && (
+                                    <Marker position={[order.customerCoords.lat, order.customerCoords.lng]} icon={customerIcon}>
+                                      <Popup>
+                                        <p className="font-bold">Your Delivery Location</p>
+                                      </Popup>
+                                    </Marker>
+                                  )}
+                                </MapContainer>
+                              </div>
+                              <p className="text-[10px] text-gray-400 mt-2 italic text-center">
+                                Live location updates every few seconds.
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                         
                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex items-center justify-between">
                           <div className="flex items-center gap-3">

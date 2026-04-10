@@ -22,6 +22,8 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerAddress: string;
+  customerCoords?: { lat: number; lng: number };
+  courierCoords?: { lat: number; lng: number };
   trackingNumber?: string;
   paymentMethod: 'cod' | 'whatsapp' | 'upi';
 }
