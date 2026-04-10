@@ -52,13 +52,15 @@ export default function App() {
 function AppContent() {
   const location = useLocation();
   const isLandingPage = location.pathname === '/';
+  const isAuthPage = location.pathname === '/auth';
+  const hideNavAndFooter = isLandingPage || isAuthPage;
 
   return (
     <div 
-      className={`min-h-screen flex flex-col transition-colors duration-300 ${!isLandingPage ? 'pb-16' : ''}`}
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${!hideNavAndFooter ? 'pb-16' : ''}`}
       style={{ backgroundColor: 'rgb(255, 255, 255)' }}
     >
-      {!isLandingPage && <Navbar />}
+      {!hideNavAndFooter && <Navbar />}
       <main className={`flex-grow ${!isLandingPage ? 'container mx-auto px-4 py-8' : ''}`}>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -84,7 +86,7 @@ function AppContent() {
           />
         </Routes>
       </main>
-      {!isLandingPage && (
+      {!hideNavAndFooter && (
         <>
           <footer 
             className="border-t py-8 text-center text-white transition-colors duration-300"

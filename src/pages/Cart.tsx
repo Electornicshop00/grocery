@@ -394,7 +394,7 @@ export default function Cart() {
                           </div>
                           <div className="text-center">
                             <p className="text-sm font-bold text-gray-800">UPI ID: 702986593@ybl</p>
-                            <p className="text-xs text-gray-500 mt-2 px-4">
+                            <p className="text-xs text-red-600 font-bold mt-2 px-4">
                               After payment, click "Place Order" below. We will verify your payment manually.
                             </p>
                           </div>
@@ -537,6 +537,7 @@ export default function Cart() {
                         return;
                       }
                       setStep('details');
+                      window.scrollTo(0, 0);
                     }}
                     disabled={isAdmin}
                     className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
@@ -558,6 +559,7 @@ export default function Cart() {
                     onClick={() => {
                       if (validateDetails()) {
                         setStep('payment');
+                        window.scrollTo(0, 0);
                       }
                     }}
                     className="w-full text-white py-4 rounded-2xl font-bold text-lg hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-gray-100"
@@ -566,7 +568,10 @@ export default function Cart() {
                     {t('nextPayment')}
                     <ChevronRight className="w-5 h-5" />
                   </button>
-                  <button onClick={() => setStep('cart')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
+                  <button onClick={() => {
+                    setStep('cart');
+                    window.scrollTo(0, 0);
+                  }} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                     <ChevronLeft className="w-4 h-4" />
                     {t('backToCart')}
                   </button>
@@ -598,7 +603,10 @@ export default function Cart() {
                         </>
                       )}
                     </button>
-                    <button onClick={() => setStep('details')} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
+                    <button onClick={() => {
+                      setStep('details');
+                      window.scrollTo(0, 0);
+                    }} className="flex items-center justify-center gap-2 text-gray-400 font-bold hover:text-gray-600 py-2">
                       <ChevronLeft className="w-4 h-4" />
                       {t('backToDetails')}
                     </button>
