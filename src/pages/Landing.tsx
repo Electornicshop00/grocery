@@ -138,6 +138,10 @@ export default function Landing() {
                 </div>
               </div>
 
+              <p className="text-[10px] text-center text-gray-400 mb-4">
+                Note: Please look for the browser prompt in the address bar after clicking the button below.
+              </p>
+
               <button 
                 onClick={requestPermissions}
                 disabled={permissionStatus === 'requesting'}

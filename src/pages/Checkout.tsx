@@ -77,22 +77,40 @@ export default function Checkout() {
         
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            message = 'Location permission denied. Please enable it in your browser settings.';
+            message = 'Location permission denied. Please click the "lock" or "settings" icon in your browser address bar to allow location access for this site.';
             break;
           case error.POSITION_UNAVAILABLE:
             message = 'Location information is unavailable. Please check your GPS/Network.';
             break;
           case error.TIMEOUT:
-            message = 'Location request timed out. Please try again.';
-            break;
+            // Fallback to low accuracy if high accuracy timed out
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const locationStr = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
+                setFormData(prev => ({
+                  ...prev,
+                  address: `${prev.address ? prev.address + '\n' : ''}Current Location: ${locationStr}`,
+                  coords: { lat: latitude, lng: longitude }
+                }));
+                setIsLocating(false);
+                showToast(t('locationCaptured'), 'success');
+              },
+              () => {
+                showToast('Location request timed out. Please enter it manually.', 'error');
+                setIsLocating(false);
+              },
+              { enableHighAccuracy: false, timeout: 5000 }
+            );
+            return;
         }
         
-        showToast(`${message} Please enter it manually.`, 'error');
+        showToast(message, 'error');
         setIsLocating(false);
       },
       { 
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 8000,
         maximumAge: 0
       }
     );
@@ -345,6 +363,9 @@ export default function Checkout() {
                       {isLocating ? t('locating') : t('useGps')}
                     </button>
                   </div>
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Tip: If location fails, check your browser's address bar for a blocked icon and allow access.
+                  </p>
                 </div>
               </div>
             </div>

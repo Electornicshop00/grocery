@@ -193,7 +193,7 @@ export default function CourierPanel() {
           
           switch(error.code) {
             case error.PERMISSION_DENIED:
-              message = 'Location permission denied. Please enable GPS and allow access.';
+              message = 'Location permission denied. Please click the "lock" or "settings" icon in your browser address bar to allow location access.';
               break;
             case error.POSITION_UNAVAILABLE:
               message = 'Location information is unavailable.';
