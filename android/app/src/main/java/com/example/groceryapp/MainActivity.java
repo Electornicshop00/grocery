@@ -46,8 +46,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Load the signup/auth page directly
-        webView.loadUrl("https://grocery-six-wheat.vercel.app/auth");
+        // Load the root URL of the web app
+        webView.loadUrl("https://ais-pre-vvnkyfkghaxtpfq3fsvknb-6194796437.asia-southeast1.run.app");
     }
 
     @Override

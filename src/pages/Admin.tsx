@@ -464,10 +464,19 @@ export default function Admin() {
                       <p className="font-bold text-gray-800">New Orders</p>
                       {('Notification' in window && Notification.permission !== 'granted') ? (
                         <button 
-                          onClick={() => Notification.requestPermission().then(p => showToast(`Permission: ${p}`, 'info'))}
-                          className="text-[10px] text-orange-600 hover:underline font-bold"
+                          onClick={() => {
+                            Notification.requestPermission().then(p => {
+                              if (p === 'granted') {
+                                showToast('Notifications enabled for important order alerts!', 'success');
+                              } else {
+                                showToast(`Notification permission: ${p}`, 'info');
+                              }
+                            });
+                          }}
+                          className="text-[10px] text-orange-600 hover:underline font-bold flex items-center gap-1"
                         >
-                          Enable Pop-ups
+                          <ShieldAlert className="w-3 h-3" />
+                          Enable Order Alerts
                         </button>
                       ) : (
                         <p className="text-xs text-gray-500">Alert for incoming orders</p>

@@ -62,6 +62,7 @@ public class WelcomeActivity extends AppCompatActivity {
             permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
             permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
             permissions.add(Manifest.permission.READ_MEDIA_AUDIO);
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS);
         } else {
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
@@ -110,7 +111,7 @@ public class WelcomeActivity extends AppCompatActivity {
     private void showRationaleDialog(final List<String> permissions) {
         new AlertDialog.Builder(this)
                 .setTitle("Permissions Required")
-                .setMessage("This app requires Location (including background access for delivery tracking) and Storage permissions to function correctly. Please grant them to continue.")
+                .setMessage("This app requires Location (including background access for delivery tracking), Storage, and Notification permissions to function correctly. Please grant them to continue.")
                 .setPositiveButton("Grant", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
